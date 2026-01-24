@@ -1,50 +1,68 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
+from accounts.models import CustomUser, Profile   # ✅ import from accounts
 
-CustomUser = get_user_model()
 
-# Registration serializer
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        write_only=True,
-        required=True,
-        validators=[validate_password]
-    )
-    password2 = serializers.CharField(write_only=True, required=True)
+class ProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user profile information (Accounts).
+    """
+    class Meta:
+        model = Profile
+        fields = ["bio", "avatar"]
+        ref_name = "AccountsProfile"   # ✅ unique schema name to avoid conflicts
+
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing and retrieving users.
+    Includes nested profile information.
+    """
+    profile = ProfileSerializer(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = (
-            'username',
-            'email',
-            'password',
-            'password2',
-            'role',
-            'phone_number',
-            'address'
-        )
+        fields = [
+            "id",
+            "username",
+            "email",
+            "role",
+            "profile",
+            "is_active",
+            "is_staff",
+            "date_joined",
+        ]
+        read_only_fields = ["id", "is_active", "is_staff", "date_joined"]
 
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Passwords do not match."})
-        return attrs
+
+class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user registration.
+    Handles password securely and creates user with role.
+    """
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    class Meta:
+        model = CustomUser
+        fields = ["username", "email", "password", "role"]
+
+    def validate_email(self, value):
+        """
+        Ensure email is unique.
+        """
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
 
     def create(self, validated_data):
-        validated_data.pop('password2')
-        user = CustomUser.objects.create_user(**validated_data)
-        return user
-
-
-# User serializer (for profile and login response)
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = (
-            'id',
-            'username',
-            'email',
-            'role',
-            'phone_number',
-            'address'
+        """
+        Create user with hashed password and default role.
+        """
+        user = CustomUser.objects.create_user(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            password=validated_data["password"],  # ✅ automatically hashed
+            role=validated_data.get("role", "student"),
         )
+        # Ensure a profile is created automatically
+        Profile.objects.get_or_create(user=user)
+        return user

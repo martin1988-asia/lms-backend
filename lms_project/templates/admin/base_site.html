@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}Martin's LMS Admin{% endblock %}
+
+{% block branding %}
+  <div id="site-name">
+    <img src="{% static 'img/logo.png' %}" alt="Logo" style="height:40px; vertical-align:middle;"/>
+    <span style="font-size:20px; font-weight:bold; margin-left:10px; color:#2c3e50;">
+      Martin's LMS
+    </span>
+  </div>
+{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <div class="card">
+    <h2>Courses</h2>
+    <p>Manage all courses offered</p>
+    <a href="/admin/courses/course/" class="btn">Go</a>
+  </div>
+  <div class="card">
+    <h2>Students</h2>
+    <p>View and manage student profiles</p>
+    <a href="/admin/users/studentprofile/" class="btn">Go</a>
+  </div>
+  <div class="card">
+    <h2>Assignments</h2>
+    <p>Create and track assignments</p>
+    <a href="/admin/assignments/assignment/" class="btn">Go</a>
+  </div>
+  <div class="card">
+    <h2>Grades</h2>
+    <p>Review and update grades</p>
+    <a href="/admin/grades/grade/" class="btn">Go</a>
+  </div>
+</div>
+
+{{ block.super }}  <!-- keep the normal admin app list below -->
+{% endblock %}

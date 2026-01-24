@@ -1,0 +1,12 @@
+StudentAssignments=4
+StudentSubmissions=3
+StudentGrades=3
+InstructorAssignments=4
+InstructorSubmissions=3
+InstructorGrades=3
+AdminUsers=4
+AdminCourses=4
+AdminEnrollments=25
+AdminAssignments=7
+AdminSubmissions=33
+AdminGrades=33
