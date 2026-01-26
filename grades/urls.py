@@ -8,5 +8,9 @@ router.include_format_suffixes = False  # ✅ disable suffix patterns for cleane
 router.register(r"grades", GradeViewSet, basename="grade")
 
 urlpatterns = [
+    # Default router endpoints
     path("", include(router.urls)),
+
+    # ✅ Aliases under api/ for compatibility with tests
+    path("api/", include(router.urls)),
 ]

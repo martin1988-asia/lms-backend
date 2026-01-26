@@ -10,9 +10,17 @@ from django.http import HttpResponse
 from accounts.views import CustomTokenObtainPairView, SignupView
 from users.views import UserViewSet, ModuleViewSet
 from courses.views import CourseViewSet, EnrollmentViewSet
-from assignments.views import AssignmentViewSet, SubmissionViewSet
-from grades.views import GradeViewSet
+from assignments.views import AssignmentViewSet
+from grades.views import GradeViewSet, SubmissionViewSet   # ✅ corrected SubmissionViewSet
 from dashboard.views import StudentDashboardView, InstructorDashboardView, AdminDashboardView
+
+# For password reset
+from django.contrib.auth.views import (
+    PasswordResetView,
+    PasswordResetConfirmView,
+    PasswordResetDoneView,
+    PasswordResetCompleteView,
+)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -27,7 +35,6 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-# ✅ Router mounted under /api/
 router = DefaultRouter()
 router.include_format_suffixes = False
 router.register(r"users", UserViewSet, basename="user")
@@ -53,14 +60,14 @@ def home(request):
     return HttpResponse(html)
 
 urlpatterns = [
-    # ✅ Only keep the default admin
-    path("admin/", admin.site.urls),
-
-    # Home
     path("", home, name="home"),
+    path("admin/", admin.site.urls),
 
     # Accounts endpoints
     path("accounts/", include("accounts.urls")),
+    path("auth/", include("accounts.urls")),
+    path("api/accounts/", include("accounts.urls")),
+    path("api/auth/", include("accounts.urls")),
 
     # Other apps
     path("analytics/", include("analytics.urls")),
@@ -71,13 +78,26 @@ urlpatterns = [
     path("dashboard/instructor/", InstructorDashboardView.as_view(), name="instructor-dashboard"),
     path("dashboard/admin/", AdminDashboardView.as_view(), name="admin-dashboard"),
 
-    # API router
-    path("api/", include(router.urls)),
+    # API-prefixed dashboard endpoints
+    path("api/dashboard/student/", StudentDashboardView.as_view(), name="api-student-dashboard"),
+    path("api/dashboard/instructor/", InstructorDashboardView.as_view(), name="api-instructor-dashboard"),
+    path("api/dashboard/admin/", AdminDashboardView.as_view(), name="api-admin-dashboard"),
 
-    # Auth endpoints
+    # Router endpoints
+    path("", include(router.urls)),
+
+    # Auth
     path("auth/login/", CustomTokenObtainPairView.as_view(), name="custom_token_obtain_pair"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="custom_token_refresh"),
+    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/signup/", SignupView.as_view(), name="signup"),
+
+    # Forgot password (reset flow)
+    path("auth/password-reset/", PasswordResetView.as_view(), name="password_reset"),
+    path("auth/password-reset/done/", PasswordResetDoneView.as_view(), name="password_reset_done"),
+    path("auth/password-reset-confirm/<uidb64>/<token>/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
+    path("auth/password-reset-complete/", PasswordResetCompleteView.as_view(), name="password_reset_complete"),
 
     # Extra JWT endpoints
     path("api/auth/token/", CustomTokenObtainPairView.as_view(), name="api_auth_token_obtain_pair"),
@@ -85,7 +105,7 @@ urlpatterns = [
     path("api/token/", CustomTokenObtainPairView.as_view(), name="api_token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="api_token_refresh"),
 
-    # Swagger / Redoc
+    # Swagger
     path("swagger.json", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     path("swagger.yaml", schema_view.without_ui(cache_timeout=0), name="schema-yaml"),
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),

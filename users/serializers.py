@@ -45,19 +45,19 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ["id", "name", "description", "instructor", "instructor_name"]
+        fields = ["id", "title", "description", "instructor", "instructor_name"]
 
 
 class ModuleSerializer(serializers.ModelSerializer):
     """
     Serializer for Module.
-    Includes course name for clarity.
+    Includes course title for clarity.
     """
-    course_name = serializers.CharField(source="course.name", read_only=True)
+    course_title = serializers.CharField(source="course.title", read_only=True)
 
     class Meta:
         model = Module
-        fields = ["id", "course", "course_name", "title", "content"]
+        fields = ["id", "course", "course_title", "title", "content"]
 
 
 class AssignmentSerializer(serializers.ModelSerializer):

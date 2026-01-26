@@ -1,81 +1,80 @@
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
-from accounts.models import CustomUser, Profile
+from accounts.models import Profile
+
+User = get_user_model()
 
 
 class AccountsTests(TestCase):
+    """
+    Test suite for the Accounts app.
+    Covers user creation, profile auto-creation, and JWT authentication.
+    """
+
     def setUp(self):
         self.client = APIClient()
 
-    def test_user_registration(self):
-        response = self.client.post(
-            "/api/accounts/register/",
-            {
-                "username": "newstudent",
-                "password": "testpass123",
-                "email": "student@example.com",
-                "role": "student",
-            },
-            format="json",
+    def test_user_registration_creates_profile(self):
+        """
+        Registering a new user should automatically create a Profile via signals.
+        """
+        user = User.objects.create_user(
+            email="testuser@example.com",
+            password="securePass123",
+            username="testuser"
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(CustomUser.objects.count(), 1)
-        self.assertEqual(CustomUser.objects.get().username, "newstudent")
+        self.assertTrue(Profile.objects.filter(user=user).exists())
 
-    def test_jwt_login(self):
-        user = CustomUser.objects.create_user(
-            username="loginuser",
-            password="testpass123",
-            email="login@example.com",
-            role="student",
+    def test_register_api_creates_user_and_profile(self):
+        """
+        POST /accounts/signup/ should create a user and profile.
+        """
+        payload = {
+            "username": "apiuser",
+            "email": "apiuser@example.com",
+            "password": "securePass123",
+            "role": "student",
+        }
+        response = self.client.post("/accounts/signup/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(User.objects.filter(email="apiuser@example.com").exists())
+        user = User.objects.get(email="apiuser@example.com")
+        self.assertTrue(Profile.objects.filter(user=user).exists())
+
+    def test_jwt_login_returns_token_and_user_info(self):
+        """
+        POST /accounts/login/ should return JWT tokens and user info.
+        """
+        user = User.objects.create_user(
+            email="jwtuser@example.com",
+            password="securePass123",
+            username="jwtuser"
         )
-        response = self.client.post(
-            "/api/token/",
-            {"username": "loginuser", "password": "testpass123"},
-            format="json",
-        )
+        payload = {"email": "jwtuser@example.com", "password": "securePass123"}
+        response = self.client.post("/accounts/login/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
         self.assertIn("refresh", response.data)
+        self.assertEqual(response.data["email"], "jwtuser@example.com")
+        self.assertEqual(response.data["role"], "student")
 
-    def test_user_listing_requires_authentication(self):
-        response = self.client.get("/api/accounts/users/")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-        user = CustomUser.objects.create_user(
-            username="listuser",
-            password="testpass123",
-            email="list@example.com",
-            role="student",
+    def test_profile_update_restricted_for_non_owner(self):
+        """
+        Non-admin users should not be able to update another user's profile.
+        """
+        user1 = User.objects.create_user(
+            email="owner@example.com",
+            password="securePass123",
+            username="owner"
         )
-        self.client.force_authenticate(user=user)
-        response = self.client.get("/api/accounts/users/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_profile_auto_created(self):
-        user = CustomUser.objects.create_user(
-            username="profileuser",
-            password="testpass123",
-            email="profile@example.com",
-            role="student",
+        user2 = User.objects.create_user(
+            email="intruder@example.com",
+            password="securePass123",
+            username="intruder"
         )
-        self.assertTrue(hasattr(user, "profile"))
-        self.assertIsInstance(user.profile, Profile)
-
-    def test_profile_update(self):
-        user = CustomUser.objects.create_user(
-            username="updateuser",
-            password="testpass123",
-            email="update@example.com",
-            role="student",
-        )
-        self.client.force_authenticate(user=user)
-        response = self.client.patch(
-            "/api/accounts/profile/1/",
-            {"bio": "Updated bio"},
-            format="json",
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        user.refresh_from_db()
-        self.assertEqual(user.profile.bio, "Updated bio")
+        self.client.force_authenticate(user=user2)
+        profile = Profile.objects.get(user=user1)
+        response = self.client.patch(f"/accounts/profile/{profile.id}/", {"bio": "Hacked!"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

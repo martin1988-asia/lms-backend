@@ -6,7 +6,7 @@ class GPATrendSerializer(serializers.Serializer):
     score = serializers.FloatField(min_value=0, allow_null=True, help_text="Score achieved for the assignment")
 
     class Meta:
-        ref_name = "AnalyticsGPATrend"   # ✅ unique schema name
+        ref_name = "AnalyticsGPATrend"
 
 
 class StudentAnalyticsSerializer(serializers.Serializer):
@@ -22,7 +22,7 @@ class StudentAnalyticsSerializer(serializers.Serializer):
     gpa_trend = GPATrendSerializer(many=True, required=False, default=list, help_text="Trend of GPA across assignments")
 
     class Meta:
-        ref_name = "AnalyticsStudent"   # ✅ unique schema name
+        ref_name = "AnalyticsStudent"
 
 
 class PerformanceTrendSerializer(serializers.Serializer):
@@ -30,7 +30,7 @@ class PerformanceTrendSerializer(serializers.Serializer):
     average_score = serializers.FloatField(min_value=0, allow_null=True, help_text="Average score for the course")
 
     class Meta:
-        ref_name = "AnalyticsPerformanceTrend"   # ✅ unique schema name
+        ref_name = "AnalyticsPerformanceTrend"
 
 
 class InstructorAnalyticsSerializer(serializers.Serializer):
@@ -47,7 +47,7 @@ class InstructorAnalyticsSerializer(serializers.Serializer):
     performance_trend = PerformanceTrendSerializer(many=True, required=False, default=list, help_text="Performance trend per course")
 
     class Meta:
-        ref_name = "AnalyticsInstructor"   # ✅ unique schema name
+        ref_name = "AnalyticsInstructor"
 
 
 class EnrollmentTrendSerializer(serializers.Serializer):
@@ -55,7 +55,7 @@ class EnrollmentTrendSerializer(serializers.Serializer):
     enrollment_count = serializers.IntegerField(min_value=0, default=0, help_text="Number of students enrolled in the course")
 
     class Meta:
-        ref_name = "AnalyticsEnrollmentTrend"   # ✅ unique schema name
+        ref_name = "AnalyticsEnrollmentTrend"
 
 
 class AdminAnalyticsSerializer(serializers.Serializer):
@@ -78,4 +78,4 @@ class AdminAnalyticsSerializer(serializers.Serializer):
     enrollment_trend = EnrollmentTrendSerializer(many=True, required=False, default=list, help_text="Enrollment trend per course")
 
     class Meta:
-        ref_name = "AnalyticsAdmin"   # ✅ unique schema name
+        ref_name = "AnalyticsAdmin"

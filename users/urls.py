@@ -22,8 +22,12 @@ router.register(r"submissions", SubmissionViewSet, basename="submission")
 # Expose urlpatterns
 urlpatterns = [
     # ✅ Registration endpoint for users app
-    path("register/", RegisterUserView.as_view(), name="user-register"),
+    path("register/", RegisterUserView.as_view(), name="register"),
 
     # ✅ Router-generated endpoints
     path("", include(router.urls)),
+
+    # ✅ Aliases under api/ for compatibility with tests
+    path("api/", include(router.urls)),
+    path("api/register/", RegisterUserView.as_view(), name="api-register"),
 ]

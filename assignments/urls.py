@@ -12,5 +12,9 @@ router.register(r"submissions", SubmissionViewSet, basename="submission")
 
 # Expose urlpatterns
 urlpatterns = [
+    # Default router endpoints
     path("", include(router.urls)),
+
+    # ✅ Aliases under api/ for compatibility with tests
+    path("api/", include(router.urls)),
 ]

@@ -5,7 +5,8 @@ from .models import Course, Enrollment
 
 class UserNestedSerializer(serializers.ModelSerializer):
     """
-    Nested serializer to show basic user info (Courses).
+    Nested serializer to show basic user info.
+    Used in Course and Enrollment serializers to avoid duplication.
     """
     class Meta:
         model = CustomUser
@@ -14,19 +15,71 @@ class UserNestedSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Course model.
+    Includes instructor details via nested serializer.
+    """
     instructor = UserNestedSerializer(read_only=True)
 
     class Meta:
         model = Course
         fields = ("id", "title", "description", "instructor", "created_at")
-        read_only_fields = ("instructor", "created_at")  # ✅ prevents 400 errors
+        read_only_fields = ("instructor", "created_at")
+
+    def to_representation(self, instance):
+        """
+        Ensure null safety for nested instructor fields.
+        """
+        representation = super().to_representation(instance)
+        if not instance.instructor:
+            representation["instructor"] = None
+        return representation
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Enrollment model.
+    Student is set automatically, course is passed as a PK.
+    """
     student = UserNestedSerializer(read_only=True)
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
 
     class Meta:
         model = Enrollment
         fields = ("id", "student", "course", "date_enrolled")
-        read_only_fields = ("student", "date_enrolled")  # ✅ prevents 400 errors
+        read_only_fields = ("student", "date_enrolled")
+
+    def validate(self, data):
+        """
+        Prevent duplicate enrollments for the same student and course.
+        """
+        request = self.context.get("request")
+        student = request.user if request and request.user.is_authenticated else None
+        course = data.get("course")
+
+        if student and course:
+            if Enrollment.objects.filter(student=student, course=course).exists():
+                raise serializers.ValidationError(
+                    {"non_field_errors": ["You are already enrolled in this course."]}
+                )
+        return data
+
+    def create(self, validated_data):
+        """
+        Automatically set student to the authenticated user if role is student.
+        """
+        request = self.context.get("request")
+        if request and hasattr(request, "user") and request.user.is_authenticated:
+            validated_data["student"] = request.user
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        """
+        Ensure null safety for nested fields.
+        """
+        representation = super().to_representation(instance)
+        if not instance.course:
+            representation["course"] = None
+        if not instance.student:
+            representation["student"] = None
+        return representation

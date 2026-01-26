@@ -5,7 +5,8 @@ from .models import Assignment, Submission
 
 class UserNestedSerializer(serializers.ModelSerializer):
     """
-    Nested serializer for displaying basic user info (Assignments).
+    Nested serializer for displaying basic user info.
+    Used in Assignment and Submission serializers to avoid duplication.
     """
     class Meta:
         model = CustomUser
@@ -36,16 +37,27 @@ class AssignmentSerializer(serializers.ModelSerializer):
             "module_title",
             "created_by",
         )
-        read_only_fields = ("created_by", "created_at")  # ✅ prevents 400 errors
+        read_only_fields = ("created_by", "created_at")
 
     def create(self, validated_data):
         """
         Automatically set created_by to the authenticated user.
         """
         request = self.context.get("request")
-        if request and hasattr(request, "user"):
+        if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["created_by"] = request.user
         return super().create(validated_data)
+
+    def to_representation(self, instance):
+        """
+        Ensure null safety for nested fields.
+        """
+        representation = super().to_representation(instance)
+        if not instance.course:
+            representation["course_title"] = None
+        if not instance.module:
+            representation["module_title"] = None
+        return representation
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
@@ -66,13 +78,22 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "submitted_at",
             "feedback",
         )
-        read_only_fields = ("student", "submitted_at", "feedback")  # ✅ prevents 400 errors
+        read_only_fields = ("student", "submitted_at", "feedback")
 
     def create(self, validated_data):
         """
         Automatically set student to the authenticated user.
         """
         request = self.context.get("request")
-        if request and hasattr(request, "user"):
+        if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["student"] = request.user
         return super().create(validated_data)
+
+    def to_representation(self, instance):
+        """
+        Ensure null safety for nested fields.
+        """
+        representation = super().to_representation(instance)
+        if not instance.assignment:
+            representation["assignment"] = None
+        return representation

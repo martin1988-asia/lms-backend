@@ -5,120 +5,119 @@ from rest_framework import permissions
 from accounts.models import CustomUser
 from courses.models import Course, Enrollment
 from assignments.models import Assignment, Submission
-from .serializers import (
-    StudentDashboardSerializer,
-    InstructorDashboardSerializer,
-)
-from assignments.serializers import AssignmentSerializer
+from grades.models import Grade
+from assignments.serializers import AssignmentSerializer, SubmissionSerializer
+from grades.serializers import GradeSerializer
+from courses.serializers import CourseSerializer
 
 
 class StudentDashboardView(APIView):
+    """
+    Dashboard view for students.
+    Shows GPA, assignments count, grades count, completion rate, plus arrays of assignments, submissions, grades.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        if not hasattr(user, "role") or not user.is_student():
+        if getattr(user, "role", None) != "student":
             return Response({"detail": "Access denied. Only students can view this dashboard."}, status=403)
 
         assignments = Assignment.objects.filter(course__enrollments__student=user).select_related("course")
         submissions = Submission.objects.filter(student=user).select_related("assignment")
+        grades = Grade.objects.filter(submission__student=user)
 
-        grades_count = submissions.filter(grade__isnull=False).count()
+        grades_count = grades.count()
         assignments_count = assignments.count()
-        gpa = submissions.filter(grade__isnull=False).aggregate(Avg("grade"))["grade__avg"] or 0
-        completion_rate = (submissions.count() / assignments_count * 100) if assignments_count > 0 else 0
-
-        gpa_trend = list(
-            submissions.filter(grade__isnull=False).order_by("submitted_at").values("submitted_at", "grade")
-        )
-
-        module_completion = assignments.values("module__title").annotate(
-            total=Count("id"),
-            completed=Count("submissions__student", distinct=True)
-        )
-
-        serializer = StudentDashboardSerializer({
-            "grades_count": grades_count,
-            "assignments_count": assignments_count,
-            "gpa": float(gpa),
-            "completion_rate": completion_rate,
-            "grade_distribution": list(submissions.values("grade").annotate(count=Count("id"))[:10]),
-            "gpa_trend": gpa_trend,
-            "module_completion": list(module_completion),
-        })
-
-        assignments_data = AssignmentSerializer(assignments, many=True).data
+        gpa = grades.aggregate(avg=Avg("grade"))["avg"] or 0.0
+        completion_rate = (submissions.count() / assignments_count * 100.0) if assignments_count > 0 else 0.0
 
         return Response({
-            **serializer.data,
-            "assignments": assignments_data,
+            "grades_count": grades_count,
+            "assignments_count": assignments_count,
+            "gpa": round(float(gpa), 2),
+            "completion_rate": round(completion_rate, 2),
+            "assignments": AssignmentSerializer(assignments, many=True).data,
+            "submissions": SubmissionSerializer(submissions, many=True).data,
+            "grades": GradeSerializer(grades, many=True).data,
         })
 
 
 class InstructorDashboardView(APIView):
+    """
+    Dashboard view for instructors.
+    Shows courses taught, assignments created, submissions received, grades given, course performance, plus arrays.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        if not hasattr(user, "role") or not user.is_instructor():
+        if getattr(user, "role", None) != "instructor":
             return Response({"detail": "Access denied. Only instructors can view this dashboard."}, status=403)
 
-        courses = Course.objects.filter(instructor=user).prefetch_related("assignments")
+        courses = Course.objects.filter(instructor=user)
         assignments = Assignment.objects.filter(course__instructor=user).select_related("course")
-        submissions = Submission.objects.filter(assignment__course__instructor=user).select_related("assignment")
+        submissions = Submission.objects.filter(assignment__course__instructor=user).select_related("assignment", "student")
+        grades = Grade.objects.filter(submission__assignment__course__instructor=user)
 
         courses_taught = courses.count()
         assignments_created = assignments.count()
         submissions_received = submissions.count()
-        grades_given = submissions.filter(grade__isnull=False).count()
+        grades_given = grades.count()
 
-        course_performance = assignments.values("course__title").annotate(avg_grade=Avg("submissions__grade"))
+        course_performance = {
+            course.title: round(
+                grades.filter(submission__assignment__course=course).aggregate(avg=Avg("grade"))["avg"] or 0.0, 2
+            )
+            for course in courses
+        }
 
-        performance_trends = list(
-            submissions.filter(grade__isnull=False).order_by("submitted_at").values("submitted_at", "grade")
-        )
-
-        serializer = InstructorDashboardSerializer({
+        return Response({
             "courses_taught": courses_taught,
             "assignments_created": assignments_created,
             "submissions_received": submissions_received,
             "grades_given": grades_given,
-            "course_performance": list(course_performance),
-            "performance_trends": performance_trends,
-        })
-
-        assignments_data = AssignmentSerializer(assignments, many=True).data
-
-        return Response({
-            **serializer.data,
-            "assignments": assignments_data,
+            "course_performance": course_performance,
+            "courses": CourseSerializer(courses, many=True).data,
+            "assignments": AssignmentSerializer(assignments, many=True).data,
+            "submissions": SubmissionSerializer(submissions, many=True).data,
+            "grades": GradeSerializer(grades, many=True).data,
         })
 
 
 class AdminDashboardView(APIView):
+    """
+    Dashboard view for admins.
+    Shows global stats plus arrays of courses, assignments, submissions, grades.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        # ✅ Role check re‑enabled
-        if not hasattr(user, "role") or not user.is_admin():
-            return Response(
-                {"detail": "Access denied. Only admins can view this dashboard."},
-                status=403
-            )
+        if getattr(user, "role", None) != "admin":
+            return Response({"detail": "Access denied. Only admins can view this dashboard."}, status=403)
 
-        total_courses = Course.objects.count()
-        total_students = CustomUser.objects.filter(role="student").count()
-        total_instructors = CustomUser.objects.filter(role="instructor").count()
-        total_submissions = Submission.objects.count()
-        total_grades = Submission.objects.filter(grade__isnull=False).count()
-        global_gpa = Submission.objects.filter(grade__isnull=False).aggregate(Avg("grade"))["grade__avg"] or 0
+        courses = Course.objects.all()
+        students = CustomUser.objects.filter(role="student")
+        instructors = CustomUser.objects.filter(role="instructor")
+        submissions = Submission.objects.all()
+        grades = Grade.objects.all()
 
-        grade_distribution = Submission.objects.values("grade").annotate(count=Count("id"))[:10]
-        enrollment_trends = Enrollment.objects.values("date_enrolled").annotate(count=Count("id"))
+        total_courses = courses.count()
+        total_students = students.count()
+        total_instructors = instructors.count()
+        total_submissions = submissions.count()
+        total_grades = grades.count()
+        global_gpa = grades.aggregate(avg=Avg("grade"))["avg"] or 0.0
 
-        assignments = Assignment.objects.all()
-        assignments_data = AssignmentSerializer(assignments, many=True).data
+        grade_distribution = {
+            g["letter"]: g["count"] for g in grades.values("letter").annotate(count=Count("id"))
+        }
+
+        course_enrollment_stats = {
+            course.title: Enrollment.objects.filter(course=course).values("student").distinct().count()
+            for course in courses
+        }
 
         return Response({
             "total_courses": total_courses,
@@ -126,8 +125,11 @@ class AdminDashboardView(APIView):
             "total_instructors": total_instructors,
             "total_submissions": total_submissions,
             "total_grades": total_grades,
-            "global_gpa": float(global_gpa),
-            "grade_distribution": list(grade_distribution),
-            "enrollment_trends": list(enrollment_trends),
-            "assignments": assignments_data,
+            "global_gpa": round(float(global_gpa), 2),
+            "grade_distribution": grade_distribution,
+            "course_enrollment_stats": course_enrollment_stats,
+            "courses": CourseSerializer(courses, many=True).data,
+            "assignments": AssignmentSerializer(Assignment.objects.all(), many=True).data,
+            "submissions": SubmissionSerializer(submissions, many=True).data,
+            "grades": GradeSerializer(grades, many=True).data,
         })

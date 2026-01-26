@@ -23,7 +23,9 @@ router.register(r'analytics', AnalyticsViewSet, basename='analytics')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),  # ✅ ensures /api/... endpoints exist
-    path('api/analytics/', include('analytics.urls')),
+
+    # ✅ mount analytics app correctly
+    path('analytics/', include('analytics.urls')),
 
     # ✅ JWT authentication endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
