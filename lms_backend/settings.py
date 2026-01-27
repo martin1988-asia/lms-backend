@@ -15,7 +15,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "192.168.1.236",  # local network dev
     "martin1988asia.pythonanywhere.com",  # production domain
-    "atomic-technology.com",              # production DB host (after upgrade)
+    "atomic-technology.com",              # production DB host (future upgrade)
 ]
 
 INSTALLED_APPS = [
@@ -73,16 +73,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "lms_backend.wsgi.application"
 
-# ✅ PostgreSQL database connection
-# Local DB for development until remote server is upgraded
+# ✅ Temporary SQLite database for PythonAnywhere deployment
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "lms_local",        # local database name
-        "USER": "postgres",         # default local postgres user
-        "PASSWORD": os.environ.get("DB_PASSWORD", "Felicia@2025"),  # ✅ supply password
-        "HOST": "127.0.0.1",        # local machine
-        "PORT": "5432",             # default PostgreSQL port
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -145,3 +140,4 @@ EMAIL_BACKEND = os.environ.get(
 )  # console for dev, SMTP in prod
 DEFAULT_FROM_EMAIL = "noreply@yourdomain.com"
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+
