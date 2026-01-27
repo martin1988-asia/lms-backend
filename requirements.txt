@@ -1,26 +1,21 @@
-# Core framework
-Django==6.0.1
-
-# Django REST Framework
+asgiref==3.11.0
+Django==4.2.27
+django-cors-headers==4.9.0
+django-extensions==4.1
 djangorestframework==3.16.1
-
-# JWT authentication
-djangorestframework-simplejwt==5.3.1
-
-# Swagger/OpenAPI docs
+djangorestframework_simplejwt==5.5.1
 drf-yasg==1.21.14
-
-# CORS headers (frontend integration)
-django-cors-headers==4.3.1
-
-# Optional utilities
-django-extensions==3.2.3
-
-# Supporting libraries
-PyYAML==6.0.3
-uritemplate==4.2.0
 inflection==0.5.1
 packaging==26.0
+pillow==12.1.0
+psycopg==3.3.2
+psycopg-binary==3.3.2
+psycopg2-binary==2.9.11
+PyJWT==2.10.1
 pytz==2025.2
+PyYAML==6.0.3
+setuptools==80.10.2
 sqlparse==0.5.5
-asgiref==3.11.0
+typing_extensions==4.15.0
+uritemplate==4.2.0
+wheel==0.46.3
