@@ -42,9 +42,9 @@ class SubmissionNestedSerializer(serializers.ModelSerializer):
         Ensure null safety for nested fields.
         """
         representation = super().to_representation(instance)
-        if not instance.student:
+        if not getattr(instance, "student", None):
             representation["student"] = None
-        if not instance.assignment:
+        if not getattr(instance, "assignment", None):
             representation["assignment"] = None
         return representation
 
@@ -65,7 +65,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "content",
             "submitted_at",
             "feedback",
-            "grade",   # ✅ corrected field name
+            "grade",   # ✅ matches Submission model field
         ]
         read_only_fields = ["id", "student", "assignment", "submitted_at"]
 
@@ -78,7 +78,7 @@ class GradeSerializer(serializers.ModelSerializer):
     instructor = UserNestedSerializer(read_only=True)
     submission = serializers.PrimaryKeyRelatedField(queryset=Submission.objects.all())
     submission_detail = SubmissionNestedSerializer(source="submission", read_only=True)
-    student = serializers.SerializerMethodField()   # ✅ add nested student field
+    student = serializers.SerializerMethodField()   # ✅ nested student field
 
     class Meta:
         model = Grade
@@ -86,9 +86,9 @@ class GradeSerializer(serializers.ModelSerializer):
             "id",
             "submission",
             "submission_detail",
-            "student",        # ✅ include student in output
+            "student",
             "instructor",
-            "grade",          # ✅ corrected field name
+            "score",          # ✅ corrected to match Grade model
             "letter",
             "feedback",
             "graded_at",
@@ -99,7 +99,7 @@ class GradeSerializer(serializers.ModelSerializer):
         """
         Return student info from the related submission.
         """
-        if obj.submission and obj.submission.student:
+        if obj.submission and getattr(obj.submission, "student", None):
             return {
                 "id": obj.submission.student.id,
                 "email": obj.submission.student.email,
@@ -142,9 +142,9 @@ class GradeSerializer(serializers.ModelSerializer):
         Ensure null safety for nested fields.
         """
         representation = super().to_representation(instance)
-        if not instance.submission:
+        if not getattr(instance, "submission", None):
             representation["submission_detail"] = None
-        if not instance.instructor:
+        if not getattr(instance, "instructor", None):
             representation["instructor"] = None
         if not representation.get("student"):
             representation["student"] = None
