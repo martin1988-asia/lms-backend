@@ -62,7 +62,7 @@ def home(request):
 urlpatterns = [
     path("", home, name="home"),
 
-    # ✅ Admin must come before router include
+    # ✅ Admin site
     path("admin/", admin.site.urls),
 
     # Accounts endpoints
@@ -110,6 +110,6 @@ urlpatterns = [
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 
-    # ✅ Router endpoints should be last
-    path("", include(router.urls)),
+    # ✅ Router endpoints under /api/
+    path("api/", include(router.urls)),
 ]
