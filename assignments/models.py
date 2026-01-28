@@ -85,6 +85,6 @@ class Submission(models.Model):
 
     def __str__(self):
         # ✅ Guard against missing student or assignment to avoid crashes in Swagger or admin
-        student_name = getattr(self.student, "username", "Unknown Student")
+        student_name = getattr(self.student, "username", None) or getattr(self.student, "email", "Unknown Student")
         assignment_title = getattr(self.assignment, "title", "Unknown Assignment")
         return f"{student_name} → {assignment_title}"

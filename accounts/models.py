@@ -108,5 +108,6 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.get_or_create(user=instance)
     else:
-        if hasattr(instance, "profile"):
+        # ✅ safer null check before saving profile
+        if getattr(instance, "profile", None):
             instance.profile.save()

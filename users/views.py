@@ -17,6 +17,11 @@ from accounts.serializers import RegisterSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing users.
+    - Admins: can view/manage all users.
+    - Regular users: can only view their own profile.
+    """
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -36,13 +41,19 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         if not hasattr(user, "role") or user.role != "admin":
             return Response(
-                {"detail": "Access denied. Only admins can create users here. Use /auth/signup for registration."},
+                {"detail": "Access denied. Only admins can create users here. Use /api/auth/signup for registration."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         return super().create(request, *args, **kwargs)
 
 
 class CourseViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing courses.
+    - Instructors: can view/create their own courses.
+    - Students: can view courses they are enrolled in.
+    - Admins: can view/manage all courses.
+    """
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -50,7 +61,6 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        # ✅ Guard for Swagger schema generation and anonymous users
         if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
             return Course.objects.none()
 
@@ -61,11 +71,6 @@ class CourseViewSet(viewsets.ModelViewSet):
         elif user.role == "admin":
             return Course.objects.all()
         return Course.objects.none()
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -81,6 +86,10 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 
 class ModuleViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing modules.
+    - Instructors/Admins: can create modules.
+    """
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -96,6 +105,12 @@ class ModuleViewSet(viewsets.ModelViewSet):
 
 
 class AssignmentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing assignments.
+    - Instructors: can create assignments for their courses.
+    - Students: can view assignments for their enrolled courses.
+    - Admins: can view/manage all assignments.
+    """
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -103,7 +118,6 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        # ✅ Guard for Swagger schema generation and anonymous users
         if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
             return Assignment.objects.none()
 
@@ -114,11 +128,6 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         elif user.role == "admin":
             return Assignment.objects.all()
         return Assignment.objects.none()
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -134,6 +143,12 @@ class AssignmentViewSet(viewsets.ModelViewSet):
 
 
 class SubmissionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing submissions.
+    - Students: can create/view their own submissions.
+    - Instructors: can view submissions for their courses.
+    - Admins: can view/manage all submissions.
+    """
     queryset = Submission.objects.all()
     serializer_class = SubmissionSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -141,7 +156,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        # ✅ Guard for Swagger schema generation and anonymous users
         if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
             return Submission.objects.none()
 
@@ -167,6 +181,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
 
 class RegisterUserView(APIView):
+    """
+    Public endpoint for registering new users.
+    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):

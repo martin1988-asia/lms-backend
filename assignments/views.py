@@ -18,24 +18,21 @@ class AssignmentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if not hasattr(user, "role"):
+        if not getattr(user, "role", None):
             return Assignment.objects.none()
 
         if user.role == "instructor":
-            # Instructors see assignments for their courses
-            return Assignment.objects.filter(course__instructor=user).select_related("course")
+            return Assignment.objects.filter(course__instructor=user).select_related("course", "module")
         elif user.role == "student":
-            # Students see assignments for courses they are enrolled in
-            return Assignment.objects.filter(course__enrollments__student=user).select_related("course")
+            return Assignment.objects.filter(course__enrollments__student=user).select_related("course", "module")
         elif user.role == "admin":
-            # Admins see all assignments
-            return Assignment.objects.select_related("course")
+            return Assignment.objects.select_related("course", "module")
 
         return Assignment.objects.none()
 
     def create(self, request, *args, **kwargs):
         user = request.user
-        if not hasattr(user, "role") or user.role != "instructor":
+        if getattr(user, "role", None) != "instructor":
             return Response(
                 {"detail": "Access denied. Only instructors can create assignments."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -49,7 +46,7 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         due_date = serializer.validated_data.get("due_date")
         if due_date and timezone.is_naive(due_date):
             due_date = timezone.make_aware(due_date)
-        serializer.save(due_date=due_date)
+        serializer.save(due_date=due_date, created_by=self.request.user)
 
 
 class SubmissionViewSet(viewsets.ModelViewSet):
@@ -65,24 +62,21 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if not hasattr(user, "role"):
+        if not getattr(user, "role", None):
             return Submission.objects.none()
 
         if user.role == "student":
-            # Students only see their own submissions
             return Submission.objects.filter(student=user).select_related("assignment", "student")
         elif user.role == "instructor":
-            # Instructors see submissions for their courses
             return Submission.objects.filter(assignment__course__instructor=user).select_related("assignment", "student")
         elif user.role == "admin":
-            # Admins see all submissions
             return Submission.objects.select_related("assignment", "student")
 
         return Submission.objects.none()
 
     def create(self, request, *args, **kwargs):
         user = request.user
-        if not hasattr(user, "role") or user.role != "student":
+        if getattr(user, "role", None) != "student":
             return Response(
                 {"detail": "Access denied. Only students can submit assignments."},
                 status=status.HTTP_403_FORBIDDEN,

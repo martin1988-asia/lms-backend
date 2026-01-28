@@ -44,12 +44,25 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     """
     student = UserNestedSerializer(read_only=True)
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
+    course_detail = serializers.SerializerMethodField()  # ✅ add nested course info
 
     class Meta:
         model = Enrollment
-        fields = ("id", "student", "course", "date_enrolled")
+        fields = ("id", "student", "course", "course_detail", "date_enrolled")
         read_only_fields = ("student", "date_enrolled")
         ref_name = "CoursesEnrollment"   # ✅ unique schema name
+
+    def get_course_detail(self, obj):
+        """
+        Return nested course info for clarity.
+        """
+        if obj.course:
+            return {
+                "id": obj.course.id,
+                "title": obj.course.title,
+                "description": obj.course.description,
+            }
+        return None
 
     def validate(self, data):
         """

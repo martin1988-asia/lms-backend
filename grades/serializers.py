@@ -34,7 +34,7 @@ class SubmissionNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Submission
-        fields = ("id", "student", "assignment", "content", "submitted_at")
+        fields = ("id", "student", "assignment", "content", "submitted_at", "grade")
         ref_name = "GradesSubmissionNested"   # ✅ unique schema name to avoid conflicts
 
     def to_representation(self, instance):
@@ -88,7 +88,7 @@ class GradeSerializer(serializers.ModelSerializer):
             "submission_detail",
             "student",
             "instructor",
-            "score",          # ✅ corrected to match Grade model
+            "score",          # ✅ matches Grade model
             "letter",
             "feedback",
             "graded_at",

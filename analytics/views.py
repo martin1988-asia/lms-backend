@@ -2,14 +2,21 @@ from django.db.models import Avg, Count
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
 from accounts.models import CustomUser
 from courses.models import Course
 from enrollments.models import Enrollment
 from assignments.models import Assignment, Submission
 from grades.models import Grade
 
+from .serializers import (
+    StudentAnalyticsSerializer,
+    InstructorAnalyticsSerializer,
+    AdminAnalyticsSerializer,
+)
 
-class AnalyticsViewSet(viewsets.ViewSet):
+
+class AnalyticsLogViewSet(viewsets.ViewSet):
     """
     Robust analytics ViewSet:
     - Students: GPA, completion rate, grades count, assignments count
@@ -26,11 +33,19 @@ class AnalyticsViewSet(viewsets.ViewSet):
         role = getattr(user, "role", None)
 
         if role == "student":
-            return self.student_analytics(user)
+            data = self.student_analytics(user)
+            serializer = StudentAnalyticsSerializer(instance=data)
+            return Response(serializer.data)
+
         elif role == "instructor":
-            return self.instructor_analytics(user)
+            data = self.instructor_analytics(user)
+            serializer = InstructorAnalyticsSerializer(instance=data)
+            return Response(serializer.data)
+
         elif role == "admin":
-            return self.admin_analytics()
+            data = self.admin_analytics()
+            serializer = AdminAnalyticsSerializer(instance=data)
+            return Response(serializer.data)
 
         return Response(
             {"detail": "You do not have permission to access analytics."},
@@ -47,12 +62,12 @@ class AnalyticsViewSet(viewsets.ViewSet):
         completed_assignments = submissions.values("assignment").distinct().count()
         completion_rate = (completed_assignments / total_assignments * 100.0) if total_assignments else 0.0
 
-        return Response({
+        return {
             "gpa": round(gpa, 2),
             "completion_rate": round(completion_rate, 2),
             "grades_count": grades.count(),
             "assignments_count": total_assignments,
-        })
+        }
 
     # --- Instructor analytics ---
     def instructor_analytics(self, user):
@@ -77,13 +92,13 @@ class AnalyticsViewSet(viewsets.ViewSet):
                 "average_score": round(avg_score, 2),
             })
 
-        return Response({
+        return {
             "courses_taught": courses.count(),
             "assignments_created": assignments.count(),
             "submissions_received": submissions.count(),
             "grades_given": grades.count(),
             "course_performance": course_performance,
-        })
+        }
 
     # --- Admin analytics ---
     def admin_analytics(self):
@@ -95,17 +110,20 @@ class AnalyticsViewSet(viewsets.ViewSet):
 
         global_gpa = grades.aggregate(avg=Avg("score"))["avg"] or 0.0
 
-        grade_distribution = {
-            g["letter"]: g["count"] for g in grades.values("letter").annotate(count=Count("id"))
-            if g["letter"]
-        }
+        grade_distribution = {}
+        if hasattr(Grade, "letter"):  # only if Grade has a 'letter' field
+            grade_distribution = {
+                g["letter"]: g["count"]
+                for g in grades.values("letter").annotate(count=Count("id"))
+                if g["letter"]
+            }
 
         course_enrollment_stats = {
             course.title: Enrollment.objects.filter(course=course).values("student").distinct().count()
             for course in courses
         }
 
-        return Response({
+        return {
             "total_courses": courses.count(),
             "total_students": students.count(),
             "total_instructors": instructors.count(),
@@ -114,7 +132,7 @@ class AnalyticsViewSet(viewsets.ViewSet):
             "global_gpa": round(global_gpa, 2),
             "grade_distribution": grade_distribution,
             "course_enrollment_stats": course_enrollment_stats,
-        })
+        }
 
     # --- Explicit role-based endpoints ---
     @action(detail=False, methods=["get"], url_path="student")
@@ -124,7 +142,9 @@ class AnalyticsViewSet(viewsets.ViewSet):
                 {"detail": "You do not have permission to access student analytics."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        return self.student_analytics(request.user)
+        data = self.student_analytics(request.user)
+        serializer = StudentAnalyticsSerializer(instance=data)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["get"], url_path="instructor")
     def instructor(self, request):
@@ -133,7 +153,9 @@ class AnalyticsViewSet(viewsets.ViewSet):
                 {"detail": "You do not have permission to access instructor analytics."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        return self.instructor_analytics(request.user)
+        data = self.instructor_analytics(request.user)
+        serializer = InstructorAnalyticsSerializer(instance=data)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["get"], url_path="admin")
     def admin(self, request):
@@ -142,51 +164,6 @@ class AnalyticsViewSet(viewsets.ViewSet):
                 {"detail": "You do not have permission to access admin analytics."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        return self.admin_analytics()
-
-    @action(detail=False, methods=["get"], url_path="overview")
-    def overview(self, request):
-        if getattr(request.user, "role", None) != "admin":
-            return Response(
-                {"detail": "You do not have permission to access overview analytics."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        courses = Course.objects.all()
-        grades = Grade.objects.all()
-        global_gpa = grades.aggregate(avg=Avg("score"))["avg"] or 0.0
-
-        return Response({
-            "courses": courses.count(),
-            "grades": grades.count(),
-            "global_gpa": round(global_gpa, 2),
-        })
-
-    @action(detail=True, methods=["get"], url_path="course")
-    def course(self, request, pk=None):
-        if getattr(request.user, "role", None) != "admin":
-            return Response(
-                {"detail": "You do not have permission to access course analytics."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        try:
-            course = Course.objects.get(pk=pk)
-        except Course.DoesNotExist:
-            return Response(
-                {"detail": "Course not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        assignments = Assignment.objects.filter(course=course)
-        submissions = Submission.objects.filter(assignment__course=course)
-        grades = Grade.objects.filter(submission__assignment__course=course)
-        avg_score = grades.aggregate(avg=Avg("score"))["avg"] or 0.0
-
-        return Response({
-            "course": course.title,
-            "assignments_count": assignments.count(),
-            "submissions_count": submissions.count(),
-            "grades_count": grades.count(),
-            "average_score": round(avg_score, 2),
-        })
+        data = self.admin_analytics()
+        serializer = AdminAnalyticsSerializer(instance=data)
+        return Response(serializer.data)

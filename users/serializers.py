@@ -10,7 +10,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Profile
-        fields = ["bio", "avatar"]
+        fields = ["bio", "avatar", "location", "birth_date"]  # ✅ include extra fields for completeness
         ref_name = "UsersProfile"   # ✅ unique schema name
 
 
@@ -30,8 +30,10 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "is_staff",
             "is_superuser",
+            "is_active",   # ✅ added for clarity
             "profile",
         ]
+        read_only_fields = ["id", "is_staff", "is_superuser", "is_active"]
         ref_name = "UsersCustomUser"   # ✅ unique schema name
 
     def to_representation(self, instance):
@@ -108,6 +110,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "student_name",
             "content",
             "submitted_at",
+            "feedback",   # ✅ added for completeness
             "grade",
         ]
         ref_name = "UsersSubmission"   # ✅ unique schema name

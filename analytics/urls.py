@@ -1,13 +1,13 @@
 from django.urls import path
-from .views import AnalyticsViewSet
+from .views import AnalyticsLogViewSet   # ✅ corrected import
 
 # Map viewset actions to endpoints
-analytics_list = AnalyticsViewSet.as_view({"get": "list"})
-student_analytics = AnalyticsViewSet.as_view({"get": "student"})
-instructor_analytics = AnalyticsViewSet.as_view({"get": "instructor"})
-admin_analytics = AnalyticsViewSet.as_view({"get": "admin"})
-overview_analytics = AnalyticsViewSet.as_view({"get": "overview"})
-course_analytics = AnalyticsViewSet.as_view({"get": "course"})
+analytics_list = AnalyticsLogViewSet.as_view({"get": "list"})
+student_analytics = AnalyticsLogViewSet.as_view({"get": "student"})
+instructor_analytics = AnalyticsLogViewSet.as_view({"get": "instructor"})
+admin_analytics = AnalyticsLogViewSet.as_view({"get": "admin"})
+overview_analytics = AnalyticsLogViewSet.as_view({"get": "overview"})
+course_analytics = AnalyticsLogViewSet.as_view({"get": "course"})
 
 urlpatterns = [
     # Default analytics list (auto-detect role)

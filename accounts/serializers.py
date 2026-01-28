@@ -41,7 +41,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
         Ensure null safety for nested profile.
         """
         representation = super().to_representation(instance)
-        # ✅ safer null check: use getattr instead of hasattr
         if not getattr(instance, "profile", None):
             representation["profile"] = None
         return representation
@@ -87,7 +86,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
             role=validated_data.get("role", "student"),
         )
-        # ✅ ensure profile is created safely
         Profile.objects.get_or_create(user=user)
         return user
 
@@ -101,7 +99,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        # ✅ safer null handling for role and username
         data.update({
             "id": self.user.id,
             "email": self.user.email,

@@ -41,17 +41,21 @@ class AssignmentSerializer(serializers.ModelSerializer):
         ref_name = "AssignmentsAssignment"   # ✅ unique schema name
 
     def create(self, validated_data):
+        """
+        Automatically set the creator to the authenticated user.
+        """
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["created_by"] = request.user
         return super().create(validated_data)
 
     def to_representation(self, instance):
+        """
+        Ensure course/module titles are always present, even if null.
+        """
         representation = super().to_representation(instance)
-        if not instance.course:
-            representation["course_title"] = None
-        if not instance.module:
-            representation["module_title"] = None
+        representation["course_title"] = getattr(instance.course, "title", None)
+        representation["module_title"] = getattr(instance.module, "title", None)
         return representation
 
 
@@ -61,6 +65,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
     Student is set automatically, assignment is passed as a PK.
     """
     student = UserNestedSerializer(read_only=True)
+    assignment_title = serializers.CharField(source="assignment.title", read_only=True)
     assignment = serializers.PrimaryKeyRelatedField(queryset=Assignment.objects.all())
 
     class Meta:
@@ -69,21 +74,28 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "id",
             "student",
             "assignment",
+            "assignment_title",
             "content",
             "submitted_at",
             "feedback",
+            "grade",   # ✅ include grade field from model
         )
         read_only_fields = ("student", "submitted_at", "feedback")
         ref_name = "AssignmentsSubmission"   # ✅ unique schema name
 
     def create(self, validated_data):
+        """
+        Automatically set the student to the authenticated user.
+        """
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["student"] = request.user
         return super().create(validated_data)
 
     def to_representation(self, instance):
+        """
+        Ensure assignment title is always present, even if null.
+        """
         representation = super().to_representation(instance)
-        if not instance.assignment:
-            representation["assignment"] = None
+        representation["assignment_title"] = getattr(instance.assignment, "title", None)
         return representation

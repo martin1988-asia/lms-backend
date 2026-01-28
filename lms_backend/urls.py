@@ -11,8 +11,9 @@ from accounts.views import CustomTokenObtainPairView, SignupView
 from users.views import UserViewSet, ModuleViewSet
 from courses.views import CourseViewSet, EnrollmentViewSet
 from assignments.views import AssignmentViewSet, SubmissionViewSet
-from grades.views import GradeViewSet
+from grades.views import GradeViewSet, SubmissionViewSet as GradeSubmissionViewSet
 from dashboard.views import StudentDashboardView, InstructorDashboardView, AdminDashboardView
+from analytics.views import AnalyticsLogViewSet   # ✅ corrected import
 
 # ✅ Swagger schema view (public, no auth required)
 schema_view = get_schema_view(
@@ -31,7 +32,6 @@ schema_view = get_schema_view(
 
 # ✅ Router mounted under /api/
 router = DefaultRouter()
-router.include_format_suffixes = False
 router.register(r"users", UserViewSet, basename="user")
 router.register(r"courses", CourseViewSet, basename="course")
 router.register(r"enrollments", EnrollmentViewSet, basename="enrollment")
@@ -39,6 +39,7 @@ router.register(r"assignments", AssignmentViewSet, basename="assignment")
 router.register(r"submissions", SubmissionViewSet, basename="submission")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"modules", ModuleViewSet, basename="module")
+router.register(r"analytics", AnalyticsLogViewSet, basename="analytics")
 
 # ✅ Simple home redirect
 def home(request):
@@ -64,7 +65,6 @@ urlpatterns = [
 
     # Accounts + other apps
     path("accounts/", include("accounts.urls")),
-    path("analytics/", include("analytics.urls")),
     path("users/", include("users.urls")),
 
     # Dashboards
@@ -75,10 +75,10 @@ urlpatterns = [
     # API router
     path("api/", include(router.urls)),
 
-    # ✅ Auth endpoints (email-only JWT)
-    path("auth/login/", CustomTokenObtainPairView.as_view(), name="login"),
-    path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("auth/signup/", SignupView.as_view(), name="signup"),
+    # ✅ Auth endpoints under /api/auth/
+    path("api/auth/login/", CustomTokenObtainPairView.as_view(), name="api_auth_login"),
+    path("api/auth/refresh/", TokenRefreshView.as_view(), name="api_auth_refresh"),
+    path("api/auth/signup/", SignupView.as_view(), name="api_auth_signup"),
 
     # ✅ Swagger / Redoc
     path("swagger.json", schema_view.without_ui(cache_timeout=0), name="schema-json"),

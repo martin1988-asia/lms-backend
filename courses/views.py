@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from .models import Course, Enrollment
 from .serializers import CourseSerializer, EnrollmentSerializer
 from accounts.models import CustomUser
@@ -41,6 +41,9 @@ class CourseViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
+        """
+        Automatically set the instructor to the logged-in user.
+        """
         serializer.save(instructor=self.request.user)
 
 
@@ -80,6 +83,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         if user.role == "student":
             # Students can enroll themselves
             return super().create(request, *args, **kwargs)
+
         elif user.role == "admin":
             # Admins can enroll any student by specifying student ID
             student_id = request.data.get("student")
@@ -100,6 +104,7 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
             serializer.save(student=student)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
         else:
             # Instructors cannot enroll students directly
             raise PermissionDenied("Instructors cannot enroll students directly.")
@@ -109,5 +114,5 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
         Automatically assign the logged-in student to the enrollment.
         For admins, handled in create().
         """
-        if self.request.user.role == "student":
+        if getattr(self.request.user, "role", None) == "student":
             serializer.save(student=self.request.user)

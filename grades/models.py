@@ -10,7 +10,7 @@ class Grade(models.Model):
     submission = models.OneToOneField(
         Submission,
         on_delete=models.CASCADE,
-        related_name="grade_record",   # ✅ changed from "grade" to avoid clash
+        related_name="grade_record",   # ✅ avoids clash with Submission.grade field
         help_text="Submission being graded"
     )
     instructor = models.ForeignKey(
@@ -43,11 +43,17 @@ class Grade(models.Model):
         ordering = ["-graded_at"]
         verbose_name = "Grade"
         verbose_name_plural = "Grades"
+        constraints = [
+            models.UniqueConstraint(fields=["submission"], name="unique_grade_per_submission")
+        ]
 
     def __str__(self):
-        # ✅ Guard against missing student or username to avoid Swagger/AnonymousUser errors
-        student_name = getattr(self.submission.student, "username", "Unknown")
-        return f"{student_name} → {self.letter or self.score}"
+        """
+        Display student and grade safely.
+        """
+        student_name = getattr(self.submission.student, "username", None) or getattr(self.submission.student, "email", "Unknown Student")
+        grade_display = self.letter if self.letter else (str(self.score) if self.score is not None else "Ungraded")
+        return f"{student_name} → {grade_display}"
 
     def save(self, *args, **kwargs):
         """
@@ -56,7 +62,6 @@ class Grade(models.Model):
         """
         super().save(*args, **kwargs)
         if self.score is not None:
-            # ✅ Guard to ensure Submission has a grade field before assignment
-            if hasattr(self.submission, "grade"):
-                self.submission.grade = self.score
-                self.submission.save(update_fields=["grade"])
+            # ✅ keep Submission.grade in sync
+            self.submission.grade = self.score
+            self.submission.save(update_fields=["grade"])

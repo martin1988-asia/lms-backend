@@ -22,7 +22,9 @@ class Course(models.Model):
         verbose_name_plural = "Courses"
 
     def __str__(self):
-        return f"{self.title} (Instructor: {self.instructor.username})"
+        # ✅ safer: always use email if username is missing
+        instructor_name = getattr(self.instructor, "username", None) or self.instructor.email
+        return f"{self.title} (Instructor: {instructor_name})"
 
 
 class Enrollment(models.Model):
@@ -50,7 +52,9 @@ class Enrollment(models.Model):
         verbose_name_plural = "Enrollments"
 
     def __str__(self):
-        return f"{self.student.username} enrolled in {self.course.title}"
+        # ✅ safer: fallback to email if username is missing
+        student_name = getattr(self.student, "username", None) or self.student.email
+        return f"{student_name} enrolled in {self.course.title}"
 
 
 class Module(models.Model):

@@ -4,7 +4,6 @@ from .views import AssignmentViewSet, SubmissionViewSet
 
 # Create DRF router
 router = DefaultRouter()
-router.include_format_suffixes = False  # disable suffix patterns
 
 # Register endpoints
 router.register(r"assignments", AssignmentViewSet, basename="assignment")

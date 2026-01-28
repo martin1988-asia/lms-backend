@@ -4,10 +4,10 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ⚠️ Use environment variable for secret key in production
-SECRET_KEY = os.environ.get("SECRET_KEY", "replace-this-with-your-secret-key")
+# ✅ Secret key
+SECRET_KEY = os.environ.get("SECRET_KEY", "Felicia@2025")
 
-# ⚠️ Debug should be False in production
+# ✅ Debug mode
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [
@@ -73,12 +73,22 @@ TEMPLATES = [
 WSGI_APPLICATION = "lms_backend.wsgi.application"
 
 # ✅ Database configuration
-# Use PostgreSQL in production, SQLite fallback for local dev
 if os.environ.get("USE_SQLITE", "False") == "True":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+elif os.environ.get("USE_LOCAL_DB", "False") == "True":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("DB_NAME", "lms_local"),
+            "USER": os.environ.get("DB_USER", "lms_user"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", "Felicia@2025"),
+            "HOST": os.environ.get("DB_HOST", "localhost"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
         }
     }
 else:
@@ -87,7 +97,7 @@ else:
             "ENGINE": "django.db.backends.postgresql",
             "NAME": "atomict2_primary",
             "USER": "atomict2_primary_1",
-            "PASSWORD": "r00t435200",
+            "PASSWORD": os.environ.get("DB_PASSWORD", "r00t435200"),
             "HOST": "atomic-technology.com",
             "PORT": "5432",
         }

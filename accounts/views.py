@@ -16,6 +16,9 @@ from .serializers import CustomUserSerializer, RegisterSerializer, ProfileSerial
 
 
 class RegisterView(APIView):
+    """
+    Basic registration endpoint (used internally).
+    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -26,6 +29,9 @@ class RegisterView(APIView):
 
 
 class SignupView(APIView):
+    """
+    Public signup endpoint for new users.
+    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -46,6 +52,11 @@ class SignupView(APIView):
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing users.
+    - Admins: can view/manage all users.
+    - Regular users: can only view their own profile.
+    """
     serializer_class = CustomUserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -71,11 +82,19 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
+        """
+        Return the currently authenticated user's profile.
+        """
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing user profiles.
+    - Admins: can view/manage all profiles.
+    - Regular users: can only view/manage their own profile.
+    """
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -113,6 +132,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom JWT serializer that uses email instead of username.
+    """
     username_field = "email"
 
     def validate(self, attrs):
@@ -127,6 +149,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Custom JWT view that returns extra user info.
+    """
     serializer_class = CustomTokenObtainPairSerializer
 
 
@@ -134,6 +159,9 @@ UserModel = get_user_model()
 
 
 class ForgotPasswordView(APIView):
+    """
+    Initiates password reset by sending an email with a reset link.
+    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -153,6 +181,9 @@ class ForgotPasswordView(APIView):
 
 
 class ResetPasswordConfirmView(APIView):
+    """
+    Confirms password reset using uid and token, then sets new password.
+    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, uidb64, token, *args, **kwargs):
