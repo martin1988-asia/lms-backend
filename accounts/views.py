@@ -16,10 +16,6 @@ from .serializers import CustomUserSerializer, RegisterSerializer, ProfileSerial
 
 
 class RegisterView(APIView):
-    """
-    Public endpoint for user registration.
-    Uses RegisterSerializer to validate and create a new user.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -30,10 +26,6 @@ class RegisterView(APIView):
 
 
 class SignupView(APIView):
-    """
-    Alternate signup endpoint with a custom response payload.
-    Returns a simplified JSON response after successful registration.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -44,7 +36,7 @@ class SignupView(APIView):
                 {
                     "message": "User created successfully",
                     "id": user.id,
-                    "username": user.username,
+                    "username": getattr(user, "username", None),
                     "email": user.email,
                     "role": user.role,
                 },
@@ -54,18 +46,14 @@ class SignupView(APIView):
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing CustomUser objects.
-    Role-based isolation:
-    - Admins: can list/retrieve all users.
-    - Normal users: can only see their own account.
-    """
     serializer_class = CustomUserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated:
+
+        # ✅ Guard for Swagger schema generation and anonymous users
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
             return CustomUser.objects.none()
 
         if getattr(user, "role", None) == "admin":
@@ -73,10 +61,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         return CustomUser.objects.filter(id=user.id)
 
     def create(self, request, *args, **kwargs):
-        """
-        Only admins can create users via this endpoint.
-        Normal users should use /signup for registration.
-        """
         user = request.user
         if getattr(user, "role", None) != "admin":
             return Response(
@@ -87,25 +71,21 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
-        """
-        Custom endpoint to return the currently logged-in user.
-        """
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing user profiles.
-    Role-based isolation:
-    - Users: can only manage their own profile.
-    - Admins: can manage all profiles.
-    """
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
+
+        # ✅ Guard for Swagger schema generation and anonymous users
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
+            return Profile.objects.none()
+
         if getattr(user, "role", None) == "admin":
             return Profile.objects.all()
         return Profile.objects.filter(user=user)
@@ -133,10 +113,6 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """
-    Custom JWT serializer that uses email instead of username.
-    Adds extra user info in the token response.
-    """
     username_field = "email"
 
     def validate(self, attrs):
@@ -145,25 +121,19 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "id": self.user.id,
             "email": self.user.email,
             "role": getattr(self.user, "role", None),
-            "username": self.user.username,
+            "username": getattr(self.user, "username", None),
         })
         return data
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    """
-    Custom JWT view wired to the serializer above.
-    """
     serializer_class = CustomTokenObtainPairSerializer
 
 
-# ✅ Forgot Password Views
 UserModel = get_user_model()
 
+
 class ForgotPasswordView(APIView):
-    """
-    Endpoint to request a password reset email.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -183,9 +153,6 @@ class ForgotPasswordView(APIView):
 
 
 class ResetPasswordConfirmView(APIView):
-    """
-    Endpoint to confirm reset and set a new password.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, uidb64, token, *args, **kwargs):

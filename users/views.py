@@ -23,7 +23,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "role") and user.role == "admin":
+
+        # ✅ Guard for Swagger schema generation and anonymous users
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
+            return CustomUser.objects.none()
+
+        if getattr(user, "role", None) == "admin":
             return CustomUser.objects.all()
         return CustomUser.objects.filter(id=user.id)
 
@@ -44,6 +49,11 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+
+        # ✅ Guard for Swagger schema generation and anonymous users
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
+            return Course.objects.none()
+
         if user.role == "instructor":
             return Course.objects.filter(instructor=user)
         elif user.role == "student":
@@ -54,7 +64,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)   # ✅ always return array
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -92,6 +102,11 @@ class AssignmentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+
+        # ✅ Guard for Swagger schema generation and anonymous users
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
+            return Assignment.objects.none()
+
         if user.role == "instructor":
             return Assignment.objects.filter(course__instructor=user)
         elif user.role == "student":
@@ -102,7 +117,7 @@ class AssignmentViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)   # ✅ always return array
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -125,6 +140,11 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+
+        # ✅ Guard for Swagger schema generation and anonymous users
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
+            return Submission.objects.none()
+
         if user.role == "student":
             return Submission.objects.filter(student=user)
         elif user.role == "instructor":
