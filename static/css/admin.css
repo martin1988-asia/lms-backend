@@ -12,22 +12,25 @@ body.login {
     color: #fff;
     border-bottom: 4px solid #00bcd4;
     padding: 15px;
+
+    display: flex;              /* align logo + title side by side */
+    align-items: center;
+    gap: 10px;
 }
 
 #header h1 {
     font-size: 22px;
     font-weight: bold;
     color: #fff;
+    margin: 0;
 }
 
-/* Logo placement above login form */
-body.login #container::before {
-    content: "";
-    display: block;
+/* Logo inside header */
+#header .logo {
     background: url("/static/img/logo.png") no-repeat center;
-    background-size: 120px auto;
-    height: 140px;
-    margin-bottom: 20px;
+    background-size: contain;
+    width: 40px;
+    height: 40px;
 }
 
 /* Login form styling */
