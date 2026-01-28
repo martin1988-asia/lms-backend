@@ -1,6 +1,4 @@
 from rest_framework import serializers
-
-# Import models from their actual apps
 from accounts.models import CustomUser, Profile
 from courses.models import Course, Module
 from assignments.models import Assignment, Submission
@@ -13,7 +11,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ["bio", "avatar"]
-        ref_name = "UsersProfile"   # ✅ unique schema name to avoid conflicts
+        ref_name = "UsersProfile"   # ✅ unique schema name
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -34,11 +32,9 @@ class UserSerializer(serializers.ModelSerializer):
             "is_superuser",
             "profile",
         ]
+        ref_name = "UsersCustomUser"   # ✅ unique schema name
 
     def to_representation(self, instance):
-        """
-        Ensure null safety for nested profile.
-        """
         representation = super().to_representation(instance)
         if not getattr(instance, "profile", None):
             representation["profile"] = None
@@ -55,6 +51,7 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ["id", "title", "description", "instructor", "instructor_name"]
+        ref_name = "UsersCourse"   # ✅ unique schema name
 
 
 class ModuleSerializer(serializers.ModelSerializer):
@@ -67,6 +64,7 @@ class ModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
         fields = ["id", "course", "course_title", "title", "content"]
+        ref_name = "UsersModule"   # ✅ unique schema name
 
 
 class AssignmentSerializer(serializers.ModelSerializer):
@@ -89,6 +87,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
             "created_by",
             "created_by_name",
         ]
+        ref_name = "UsersAssignment"   # ✅ unique schema name
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
@@ -111,3 +110,4 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "submitted_at",
             "grade",
         ]
+        ref_name = "UsersSubmission"   # ✅ unique schema name

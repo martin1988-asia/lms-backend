@@ -11,7 +11,7 @@ class UserNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ("id", "username", "email", "role")
-        ref_name = "AssignmentsUserNested"   # ✅ unique schema name to avoid conflicts
+        ref_name = "AssignmentsUserNested"   # ✅ unique schema name
 
 
 class AssignmentSerializer(serializers.ModelSerializer):
@@ -38,20 +38,15 @@ class AssignmentSerializer(serializers.ModelSerializer):
             "created_by",
         )
         read_only_fields = ("created_by", "created_at")
+        ref_name = "AssignmentsAssignment"   # ✅ unique schema name
 
     def create(self, validated_data):
-        """
-        Automatically set created_by to the authenticated user.
-        """
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["created_by"] = request.user
         return super().create(validated_data)
 
     def to_representation(self, instance):
-        """
-        Ensure null safety for nested fields.
-        """
         representation = super().to_representation(instance)
         if not instance.course:
             representation["course_title"] = None
@@ -79,20 +74,15 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "feedback",
         )
         read_only_fields = ("student", "submitted_at", "feedback")
+        ref_name = "AssignmentsSubmission"   # ✅ unique schema name
 
     def create(self, validated_data):
-        """
-        Automatically set student to the authenticated user.
-        """
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["student"] = request.user
         return super().create(validated_data)
 
     def to_representation(self, instance):
-        """
-        Ensure null safety for nested fields.
-        """
         representation = super().to_representation(instance)
         if not instance.assignment:
             representation["assignment"] = None
