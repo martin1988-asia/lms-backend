@@ -35,6 +35,15 @@ class UserSerializer(serializers.ModelSerializer):
             "profile",
         ]
 
+    def to_representation(self, instance):
+        """
+        Ensure null safety for nested profile.
+        """
+        representation = super().to_representation(instance)
+        if not getattr(instance, "profile", None):
+            representation["profile"] = None
+        return representation
+
 
 class CourseSerializer(serializers.ModelSerializer):
     """

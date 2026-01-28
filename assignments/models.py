@@ -43,7 +43,9 @@ class Assignment(models.Model):
         verbose_name_plural = "Assignments"
 
     def __str__(self):
-        return f"{self.title} ({self.course.title})"
+        # ✅ Guard against missing course to avoid crashes in Swagger or admin
+        course_title = getattr(self.course, "title", "Unknown Course")
+        return f"{self.title} ({course_title})"
 
 
 class Submission(models.Model):
@@ -82,4 +84,7 @@ class Submission(models.Model):
         verbose_name_plural = "Submissions"
 
     def __str__(self):
-        return f"{self.student.username} → {self.assignment.title}"
+        # ✅ Guard against missing student or assignment to avoid crashes in Swagger or admin
+        student_name = getattr(self.student, "username", "Unknown Student")
+        assignment_title = getattr(self.assignment, "title", "Unknown Assignment")
+        return f"{student_name} → {assignment_title}"

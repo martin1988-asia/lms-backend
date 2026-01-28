@@ -45,7 +45,9 @@ class Grade(models.Model):
         verbose_name_plural = "Grades"
 
     def __str__(self):
-        return f"{self.submission.student.username} → {self.letter or self.score}"
+        # ✅ Guard against missing student or username to avoid Swagger/AnonymousUser errors
+        student_name = getattr(self.submission.student, "username", "Unknown")
+        return f"{student_name} → {self.letter or self.score}"
 
     def save(self, *args, **kwargs):
         """
@@ -54,5 +56,7 @@ class Grade(models.Model):
         """
         super().save(*args, **kwargs)
         if self.score is not None:
-            self.submission.grade = self.score
-            self.submission.save(update_fields=["grade"])
+            # ✅ Guard to ensure Submission has a grade field before assignment
+            if hasattr(self.submission, "grade"):
+                self.submission.grade = self.score
+                self.submission.save(update_fields=["grade"])
