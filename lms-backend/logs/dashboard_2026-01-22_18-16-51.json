@@ -1,0 +1,512 @@
+🔐 Testing Student Dashboard...
+{
+  "courses": [
+    {
+      "id": 3,
+      "title": "Demo Course",
+      "description": "A sample course for testing dashboards",
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "created_at": "2026-01-22T16:29:56.726054+02:00"
+    },
+    {
+      "id": 4,
+      "title": "Demo Course 2",
+      "description": "Another sample course for testing dashboards",
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "created_at": "2026-01-22T16:45:55.252730+02:00"
+    }
+  ],
+  "assignments": [
+    {
+      "id": 4,
+      "title": "Demo Assignment",
+      "description": "Complete this demo assignment",
+      "due_date": "2026-01-31T00:00:00+02:00",
+      "created_at": "2026-01-22T16:29:57.191541+02:00",
+      "course": 3,
+      "course_title": "Demo Course",
+      "module": null,
+      "created_by": null
+    },
+    {
+      "id": 5,
+      "title": "Demo Assignment 2",
+      "description": "Complete this demo assignment",
+      "due_date": "2026-01-31T00:00:00+02:00",
+      "created_at": "2026-01-22T16:45:55.579957+02:00",
+      "course": 4,
+      "course_title": "Demo Course 2",
+      "module": null,
+      "created_by": null
+    },
+    {
+      "id": 6,
+      "title": "Demo Assignment 3",
+      "description": "Complete demo assignment 3",
+      "due_date": "2026-02-15T00:00:00+02:00",
+      "created_at": "2026-01-22T17:07:13.276254+02:00",
+      "course": 4,
+      "course_title": "Demo Course 2",
+      "module": null,
+      "created_by": null
+    },
+    {
+      "id": 7,
+      "title": "Demo Assignment 4",
+      "description": "Complete demo assignment 4",
+      "due_date": "2026-02-15T00:00:00+02:00",
+      "created_at": "2026-01-22T17:07:14.015953+02:00",
+      "course": 4,
+      "course_title": "Demo Course 2",
+      "module": null,
+      "created_by": null
+    }
+  ],
+  "submissions": [
+    {
+      "id": 33,
+      "student": {
+        "id": 19,
+        "username": "higino",
+        "email": "higino@example.com",
+        "role": "student"
+      },
+      "assignment": {
+        "id": 7,
+        "title": "Demo Assignment 4",
+        "description": "Complete demo assignment 4",
+        "due_date": "2026-02-15T00:00:00+02:00",
+        "created_at": "2026-01-22T17:07:14.015953+02:00",
+        "course": 4,
+        "course_title": "Demo Course 2",
+        "module": null,
+        "created_by": null
+      },
+      "content": "This is my submission for assignment 4",
+      "submitted_at": "2026-01-22T17:07:14.083048+02:00",
+      "feedback": null
+    },
+    {
+      "id": 32,
+      "student": {
+        "id": 19,
+        "username": "higino",
+        "email": "higino@example.com",
+        "role": "student"
+      },
+      "assignment": {
+        "id": 6,
+        "title": "Demo Assignment 3",
+        "description": "Complete demo assignment 3",
+        "due_date": "2026-02-15T00:00:00+02:00",
+        "created_at": "2026-01-22T17:07:13.276254+02:00",
+        "course": 4,
+        "course_title": "Demo Course 2",
+        "module": null,
+        "created_by": null
+      },
+      "content": "This is my submission for assignment 3",
+      "submitted_at": "2026-01-22T17:07:13.406641+02:00",
+      "feedback": null
+    },
+    {
+      "id": 31,
+      "student": {
+        "id": 19,
+        "username": "higino",
+        "email": "higino@example.com",
+        "role": "student"
+      },
+      "assignment": {
+        "id": 5,
+        "title": "Demo Assignment 2",
+        "description": "Complete this demo assignment",
+        "due_date": "2026-01-31T00:00:00+02:00",
+        "created_at": "2026-01-22T16:45:55.579957+02:00",
+        "course": 4,
+        "course_title": "Demo Course 2",
+        "module": null,
+        "created_by": null
+      },
+      "content": "This is my demo submission",
+      "submitted_at": "2026-01-22T16:45:55.828657+02:00",
+      "feedback": null
+    }
+  ],
+  "grades": [
+    {
+      "id": 33,
+      "submission": 33,
+      "submission_detail": {
+        "id": 33,
+        "student": {
+          "id": 19,
+          "username": "higino",
+          "email": "higino@example.com",
+          "role": "student"
+        },
+        "assignment": {
+          "id": 7,
+          "title": "Demo Assignment 4",
+          "due_date": "2026-02-15T00:00:00+02:00"
+        },
+        "content": "This is my submission for assignment 4",
+        "submitted_at": "2026-01-22T17:07:14.083048+02:00",
+        "grade": "94.00"
+      },
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "score": "94.00",
+      "letter": null,
+      "feedback": "Good work on assignment 4",
+      "graded_at": "2026-01-22T17:07:14.149858+02:00"
+    },
+    {
+      "id": 32,
+      "submission": 32,
+      "submission_detail": {
+        "id": 32,
+        "student": {
+          "id": 19,
+          "username": "higino",
+          "email": "higino@example.com",
+          "role": "student"
+        },
+        "assignment": {
+          "id": 6,
+          "title": "Demo Assignment 3",
+          "due_date": "2026-02-15T00:00:00+02:00"
+        },
+        "content": "This is my submission for assignment 3",
+        "submitted_at": "2026-01-22T17:07:13.406641+02:00",
+        "grade": "93.00"
+      },
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "score": "93.00",
+      "letter": null,
+      "feedback": "Good work on assignment 3",
+      "graded_at": "2026-01-22T17:07:13.485583+02:00"
+    },
+    {
+      "id": 31,
+      "submission": 31,
+      "submission_detail": {
+        "id": 31,
+        "student": {
+          "id": 19,
+          "username": "higino",
+          "email": "higino@example.com",
+          "role": "student"
+        },
+        "assignment": {
+          "id": 5,
+          "title": "Demo Assignment 2",
+          "due_date": "2026-01-31T00:00:00+02:00"
+        },
+        "content": "This is my demo submission",
+        "submitted_at": "2026-01-22T16:45:55.828657+02:00",
+        "grade": "95.00"
+      },
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "score": "95.00",
+      "letter": null,
+      "feedback": "Excellent work on the demo assignment!",
+      "graded_at": "2026-01-22T16:51:43.447895+02:00"
+    }
+  ]
+}
+
+🔐 Testing Instructor Dashboard...
+{
+  "courses": [
+    {
+      "id": 3,
+      "title": "Demo Course",
+      "description": "A sample course for testing dashboards",
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "created_at": "2026-01-22T16:29:56.726054+02:00"
+    },
+    {
+      "id": 4,
+      "title": "Demo Course 2",
+      "description": "Another sample course for testing dashboards",
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "created_at": "2026-01-22T16:45:55.252730+02:00"
+    }
+  ],
+  "assignments": [
+    {
+      "id": 4,
+      "title": "Demo Assignment",
+      "description": "Complete this demo assignment",
+      "due_date": "2026-01-31T00:00:00+02:00",
+      "created_at": "2026-01-22T16:29:57.191541+02:00",
+      "course": 3,
+      "course_title": "Demo Course",
+      "module": null,
+      "created_by": null
+    },
+    {
+      "id": 5,
+      "title": "Demo Assignment 2",
+      "description": "Complete this demo assignment",
+      "due_date": "2026-01-31T00:00:00+02:00",
+      "created_at": "2026-01-22T16:45:55.579957+02:00",
+      "course": 4,
+      "course_title": "Demo Course 2",
+      "module": null,
+      "created_by": null
+    },
+    {
+      "id": 6,
+      "title": "Demo Assignment 3",
+      "description": "Complete demo assignment 3",
+      "due_date": "2026-02-15T00:00:00+02:00",
+      "created_at": "2026-01-22T17:07:13.276254+02:00",
+      "course": 4,
+      "course_title": "Demo Course 2",
+      "module": null,
+      "created_by": null
+    },
+    {
+      "id": 7,
+      "title": "Demo Assignment 4",
+      "description": "Complete demo assignment 4",
+      "due_date": "2026-02-15T00:00:00+02:00",
+      "created_at": "2026-01-22T17:07:14.015953+02:00",
+      "course": 4,
+      "course_title": "Demo Course 2",
+      "module": null,
+      "created_by": null
+    }
+  ],
+  "submissions": [
+    {
+      "id": 33,
+      "student": {
+        "id": 19,
+        "username": "higino",
+        "email": "higino@example.com",
+        "role": "student"
+      },
+      "assignment": {
+        "id": 7,
+        "title": "Demo Assignment 4",
+        "description": "Complete demo assignment 4",
+        "due_date": "2026-02-15T00:00:00+02:00",
+        "created_at": "2026-01-22T17:07:14.015953+02:00",
+        "course": 4,
+        "course_title": "Demo Course 2",
+        "module": null,
+        "created_by": null
+      },
+      "content": "This is my submission for assignment 4",
+      "submitted_at": "2026-01-22T17:07:14.083048+02:00",
+      "feedback": null
+    },
+    {
+      "id": 32,
+      "student": {
+        "id": 19,
+        "username": "higino",
+        "email": "higino@example.com",
+        "role": "student"
+      },
+      "assignment": {
+        "id": 6,
+        "title": "Demo Assignment 3",
+        "description": "Complete demo assignment 3",
+        "due_date": "2026-02-15T00:00:00+02:00",
+        "created_at": "2026-01-22T17:07:13.276254+02:00",
+        "course": 4,
+        "course_title": "Demo Course 2",
+        "module": null,
+        "created_by": null
+      },
+      "content": "This is my submission for assignment 3",
+      "submitted_at": "2026-01-22T17:07:13.406641+02:00",
+      "feedback": null
+    },
+    {
+      "id": 31,
+      "student": {
+        "id": 19,
+        "username": "higino",
+        "email": "higino@example.com",
+        "role": "student"
+      },
+      "assignment": {
+        "id": 5,
+        "title": "Demo Assignment 2",
+        "description": "Complete this demo assignment",
+        "due_date": "2026-01-31T00:00:00+02:00",
+        "created_at": "2026-01-22T16:45:55.579957+02:00",
+        "course": 4,
+        "course_title": "Demo Course 2",
+        "module": null,
+        "created_by": null
+      },
+      "content": "This is my demo submission",
+      "submitted_at": "2026-01-22T16:45:55.828657+02:00",
+      "feedback": null
+    }
+  ],
+  "grades": [
+    {
+      "id": 33,
+      "submission": 33,
+      "submission_detail": {
+        "id": 33,
+        "student": {
+          "id": 19,
+          "username": "higino",
+          "email": "higino@example.com",
+          "role": "student"
+        },
+        "assignment": {
+          "id": 7,
+          "title": "Demo Assignment 4",
+          "due_date": "2026-02-15T00:00:00+02:00"
+        },
+        "content": "This is my submission for assignment 4",
+        "submitted_at": "2026-01-22T17:07:14.083048+02:00",
+        "grade": "94.00"
+      },
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "score": "94.00",
+      "letter": null,
+      "feedback": "Good work on assignment 4",
+      "graded_at": "2026-01-22T17:07:14.149858+02:00"
+    },
+    {
+      "id": 32,
+      "submission": 32,
+      "submission_detail": {
+        "id": 32,
+        "student": {
+          "id": 19,
+          "username": "higino",
+          "email": "higino@example.com",
+          "role": "student"
+        },
+        "assignment": {
+          "id": 6,
+          "title": "Demo Assignment 3",
+          "due_date": "2026-02-15T00:00:00+02:00"
+        },
+        "content": "This is my submission for assignment 3",
+        "submitted_at": "2026-01-22T17:07:13.406641+02:00",
+        "grade": "93.00"
+      },
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "score": "93.00",
+      "letter": null,
+      "feedback": "Good work on assignment 3",
+      "graded_at": "2026-01-22T17:07:13.485583+02:00"
+    },
+    {
+      "id": 31,
+      "submission": 31,
+      "submission_detail": {
+        "id": 31,
+        "student": {
+          "id": 19,
+          "username": "higino",
+          "email": "higino@example.com",
+          "role": "student"
+        },
+        "assignment": {
+          "id": 5,
+          "title": "Demo Assignment 2",
+          "due_date": "2026-01-31T00:00:00+02:00"
+        },
+        "content": "This is my demo submission",
+        "submitted_at": "2026-01-22T16:45:55.828657+02:00",
+        "grade": "95.00"
+      },
+      "instructor": {
+        "id": 17,
+        "username": "instructor1",
+        "email": "instructor1@example.com",
+        "role": "instructor"
+      },
+      "score": "95.00",
+      "letter": null,
+      "feedback": "Excellent work on the demo assignment!",
+      "graded_at": "2026-01-22T16:51:43.447895+02:00"
+    }
+  ]
+}
+
+🔐 Testing Admin Dashboard...
+{
+  "total_users": 4,
+  "total_courses": 4,
+  "total_enrollments": 25,
+  "total_assignments": 7,
+  "total_submissions": 33,
+  "total_grades": 33
+}
+
+📊 Summary Table:
+Role                 Assignments     Submissions     Grades         
+--------------------------------------------------------------------------
+Student              4               3               3              
+Instructor           4               3               3              
+Admin (Totals)       7               33              33             
+
+Admin Extra          Users           Courses         Enrollments    
+--------------------------------------------------------------------------
+                     4               4               25             
+
+📊 ASCII Bar Charts:
+Student Submissions: ### (3)
+Student Grades: ### (3)
+Instructor Submissions: ### (3)
+Instructor Grades: ### (3)
+Admin Submissions: ################################# (33)
+Admin Grades: ################################# (33)
