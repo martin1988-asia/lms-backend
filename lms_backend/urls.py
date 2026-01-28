@@ -11,7 +11,7 @@ from accounts.views import CustomTokenObtainPairView, SignupView
 from users.views import UserViewSet, ModuleViewSet
 from courses.views import CourseViewSet, EnrollmentViewSet
 from assignments.views import AssignmentViewSet
-from grades.views import GradeViewSet, SubmissionViewSet   # ✅ corrected SubmissionViewSet
+from grades.views import GradeViewSet, SubmissionViewSet
 from dashboard.views import StudentDashboardView, InstructorDashboardView, AdminDashboardView
 
 # For password reset
@@ -61,6 +61,8 @@ def home(request):
 
 urlpatterns = [
     path("", home, name="home"),
+
+    # ✅ Admin must come before router include
     path("admin/", admin.site.urls),
 
     # Accounts endpoints
@@ -82,9 +84,6 @@ urlpatterns = [
     path("api/dashboard/student/", StudentDashboardView.as_view(), name="api-student-dashboard"),
     path("api/dashboard/instructor/", InstructorDashboardView.as_view(), name="api-instructor-dashboard"),
     path("api/dashboard/admin/", AdminDashboardView.as_view(), name="api-admin-dashboard"),
-
-    # Router endpoints
-    path("", include(router.urls)),
 
     # Auth
     path("auth/login/", CustomTokenObtainPairView.as_view(), name="custom_token_obtain_pair"),
@@ -110,4 +109,7 @@ urlpatterns = [
     path("swagger.yaml", schema_view.without_ui(cache_timeout=0), name="schema-yaml"),
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+
+    # ✅ Router endpoints should be last
+    path("", include(router.urls)),
 ]
