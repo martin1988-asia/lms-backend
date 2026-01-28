@@ -25,13 +25,14 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ("id", "title", "description", "instructor", "created_at")
         read_only_fields = ("instructor", "created_at")
+        ref_name = "CoursesCourse"   # ✅ unique schema name
 
     def to_representation(self, instance):
         """
         Ensure null safety for nested instructor fields.
         """
         representation = super().to_representation(instance)
-        if not instance.instructor:
+        if not getattr(instance, "instructor", None):
             representation["instructor"] = None
         return representation
 
@@ -48,6 +49,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         model = Enrollment
         fields = ("id", "student", "course", "date_enrolled")
         read_only_fields = ("student", "date_enrolled")
+        ref_name = "CoursesEnrollment"   # ✅ unique schema name
 
     def validate(self, data):
         """
@@ -78,8 +80,8 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         Ensure null safety for nested fields.
         """
         representation = super().to_representation(instance)
-        if not instance.course:
+        if not getattr(instance, "course", None):
             representation["course"] = None
-        if not instance.student:
+        if not getattr(instance, "student", None):
             representation["student"] = None
         return representation

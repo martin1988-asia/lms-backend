@@ -49,6 +49,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             "enrolled_at",
         )
         read_only_fields = ("student", "enrolled_at")
+        ref_name = "EnrollmentsEnrollment"   # ✅ unique schema name
 
     def validate(self, data):
         """
@@ -68,7 +69,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         Automatically set student to the logged-in user.
         """
         request = self.context.get("request")
-        if request and hasattr(request, "user"):
+        if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["student"] = request.user
         return super().create(validated_data)
 
@@ -77,6 +78,6 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         Ensure student is always set to the logged-in user on update.
         """
         request = self.context.get("request")
-        if request and hasattr(request, "user"):
+        if request and hasattr(request, "user") and request.user.is_authenticated:
             validated_data["student"] = request.user
         return super().update(instance, validated_data)
