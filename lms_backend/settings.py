@@ -15,7 +15,6 @@ ALLOWED_HOSTS = [
     "localhost",
     "192.168.1.236",  # local network dev
     "martin1988asia.pythonanywhere.com",  # production domain
-    "atomic-technology.com",              # production DB host (future upgrade)
 ]
 
 INSTALLED_APPS = [
@@ -73,13 +72,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "lms_backend.wsgi.application"
 
-# ✅ Temporary SQLite database for PythonAnywhere deployment
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# ✅ Database configuration
+# Use PostgreSQL in production, SQLite fallback for local dev
+if os.environ.get("USE_SQLITE", "False") == "True":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "atomict2_primary",
+            "USER": "atomict2_primary_1",
+            "PASSWORD": "r00t435200",
+            "HOST": "atomic-technology.com",
+            "PORT": "5432",
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -140,4 +152,3 @@ EMAIL_BACKEND = os.environ.get(
 )  # console for dev, SMTP in prod
 DEFAULT_FROM_EMAIL = "noreply@yourdomain.com"
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
-
