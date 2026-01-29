@@ -13,7 +13,7 @@ from courses.views import CourseViewSet, EnrollmentViewSet
 from assignments.views import AssignmentViewSet, SubmissionViewSet
 from grades.views import GradeViewSet, SubmissionViewSet as GradeSubmissionViewSet
 from dashboard.views import StudentDashboardView, InstructorDashboardView, AdminDashboardView
-from analytics.views import AnalyticsLogViewSet   # ✅ corrected import
+
 
 # ✅ Swagger schema view (public, no auth required)
 schema_view = get_schema_view(
