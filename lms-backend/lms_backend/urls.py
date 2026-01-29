@@ -13,7 +13,7 @@ from courses.views import CourseViewSet, EnrollmentViewSet
 from assignments.views import AssignmentViewSet, SubmissionViewSet
 from grades.views import GradeViewSet
 from dashboard.views import StudentDashboardView, InstructorDashboardView, AdminDashboardView
-from analytics.views import AnalyticsLogViewSet   # ✅ added import
+from analytics.views import AnalyticsViewSet   # ✅ fixed import
 
 # ✅ Swagger schema view (public, no auth required)
 schema_view = get_schema_view(
@@ -40,7 +40,7 @@ router.register(r"assignments", AssignmentViewSet, basename="assignment")
 router.register(r"submissions", SubmissionViewSet, basename="submission")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"modules", ModuleViewSet, basename="module")
-router.register(r"analytics", AnalyticsLogViewSet, basename="analytics")  # ✅ expose /api/analytics/
+router.register(r"analytics", AnalyticsViewSet, basename="analytics")  # ✅ expose /api/analytics/
 
 # ✅ Simple home redirect
 def home(request):
@@ -82,7 +82,7 @@ urlpatterns = [
     path("auth/signup/", SignupView.as_view(), name="signup"),
 
     # ✅ Current user endpoint
-    path("api/accounts/users/me/", me, name="me"),   # ✅ added
+    path("api/accounts/users/me/", me, name="me"),
 
     # ✅ Swagger / Redoc
     path("swagger.json", schema_view.without_ui(cache_timeout=0), name="schema-json"),
