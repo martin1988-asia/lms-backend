@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -64,7 +63,6 @@ urlpatterns = [
     path("", home, name="home"),
 
     # Accounts + other apps
-    path("accounts/", include("accounts.urls")),
     path("users/", include("users.urls")),
 
     # Dashboards
