@@ -1,7 +1,8 @@
 from rest_framework import permissions, viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -83,7 +84,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
         """
-        Return the currently authenticated user's profile.
+        Return the currently authenticated user's profile (via ViewSet).
         """
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
@@ -200,3 +201,19 @@ class ResetPasswordConfirmView(APIView):
                 return Response({"detail": "Password has been reset"}, status=status.HTTP_200_OK)
             return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "Invalid reset link"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ✅ Standalone /auth/me endpoint
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def me(request):
+    """
+    Standalone endpoint to return the currently authenticated user's profile.
+    """
+    user = request.user
+    return Response({
+        "id": user.id,
+        "username": getattr(user, "username", None),
+        "email": user.email,
+        "role": getattr(user, "role", None),
+    })
