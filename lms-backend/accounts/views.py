@@ -1,86 +1,176 @@
-from django.contrib import admin
-from django.urls import path, include
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-from rest_framework.routers import DefaultRouter
-from django.http import HttpResponse
+from rest_framework import permissions, viewsets, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth import get_user_model
+
+from .models import CustomUser, Profile
+from .serializers import CustomUserSerializer, RegisterSerializer, ProfileSerializer
 
 
-from users.views import UserViewSet, ModuleViewSet
-from courses.views import CourseViewSet, EnrollmentViewSet
-from assignments.views import AssignmentViewSet, SubmissionViewSet
-from grades.views import GradeViewSet, SubmissionViewSet as GradeSubmissionViewSet
-from dashboard.views import StudentDashboardView, InstructorDashboardView, AdminDashboardView
+class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
 
-# ✅ Swagger schema view (public, no auth required)
-schema_view = get_schema_view(
-    openapi.Info(
-        title="LMS API",
-        default_version="v1",
-        description="API documentation for the Learning Management System",
-        terms_of_service="https://www.example.com/terms/",
-        contact=openapi.Contact(email="support@example.com"),
-        license=openapi.License(name="BSD License"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
-    authentication_classes=[],
-)
+    def post(self, request, *args, **kwargs):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(RegisterSerializer(user).data, status=status.HTTP_201_CREATED)
 
-# ✅ Router mounted under /api/
-router = DefaultRouter()
-router.register(r"users", UserViewSet, basename="user")
-router.register(r"courses", CourseViewSet, basename="course")
-router.register(r"enrollments", EnrollmentViewSet, basename="enrollment")
-router.register(r"assignments", AssignmentViewSet, basename="assignment")
-router.register(r"submissions", SubmissionViewSet, basename="submission")
-router.register(r"grades", GradeViewSet, basename="grade")
-router.register(r"modules", ModuleViewSet, basename="module")
 
-# ✅ Simple home redirect
-def home(request):
-    html = """
-    <html>
-      <head>
-        <meta http-equiv="refresh" content="3;url=/swagger/" />
-      </head>
-      <body style="font-family: Arial; text-align: center; margin-top: 50px;">
-        <h2>Welcome to Martin's backend</h2>
-        <p>Redirecting to <a href="/swagger/">Swagger docs</a> in 3 seconds...</p>
-      </body>
-    </html>
-    """
-    return HttpResponse(html)
+class SignupView(APIView):
+    permission_classes = [permissions.AllowAny]
 
-urlpatterns = [
-    # Admin
-    path("admin/", admin.site.urls),
+    def post(self, request, *args, **kwargs):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(
+                {
+                    "message": "User created successfully",
+                    "id": user.id,
+                    "username": getattr(user, "username", None),
+                    "email": user.email,
+                    "role": user.role,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # Home
-    path("", home, name="home"),
 
-    # Accounts + other apps
-    path("users/", include("users.urls")),
+class CustomUserViewSet(viewsets.ModelViewSet):
+    serializer_class = CustomUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    # Dashboards
-    path("dashboard/student/", StudentDashboardView.as_view(), name="student-dashboard"),
-    path("dashboard/instructor/", InstructorDashboardView.as_view(), name="instructor-dashboard"),
-    path("dashboard/admin/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
+            return CustomUser.objects.none()
+        if getattr(user, "role", None) == "admin":
+            return CustomUser.objects.all()
+        return CustomUser.objects.filter(id=user.id)
 
-    # API router
-    path("api/", include(router.urls)),
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        if getattr(user, "role", None) != "admin":
+            return Response(
+                {"detail": "Access denied. Only admins can create users here. Use /signup for registration."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request, *args, **kwargs)
 
-    # ✅ Auth endpoints under /api/auth/
-    path("api/auth/login/", CustomTokenObtainPairView.as_view(), name="api_auth_login"),
-    path("api/auth/refresh/", TokenRefreshView.as_view(), name="api_auth_refresh"),
-    path("api/auth/signup/", SignupView.as_view(), name="api_auth_signup"),
-    path("api/auth/me/", me, name="api_auth_me"),
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
 
-    # ✅ Swagger / Redoc
-    path("swagger.json", schema_view.without_ui(cache_timeout=0), name="schema-json"),
-    path("swagger.yaml", schema_view.without_ui(cache_timeout=0), name="schema-yaml"),
-    path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
-    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-]
+
+class ProfileViewSet(viewsets.ModelViewSet):
+    serializer_class = ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
+            return Profile.objects.none()
+        if getattr(user, "role", None) == "admin":
+            return Profile.objects.all()
+        return Profile.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        profile = self.get_object()
+        if profile.user != request.user and getattr(request.user, "role", None) != "admin":
+            return Response(
+                {"detail": "You do not have permission to update this profile."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        profile = self.get_object()
+        if profile.user != request.user and getattr(request.user, "role", None) != "admin":
+            return Response(
+                {"detail": "You do not have permission to delete this profile."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = "email"
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data.update({
+            "id": self.user.id,
+            "email": self.user.email,
+            "role": getattr(self.user, "role", None),
+            "username": getattr(self.user, "username", None),
+        })
+        return data
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+UserModel = get_user_model()
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        email = request.data.get("email")
+        if not email:
+            return Response({"detail": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        form = PasswordResetForm({"email": email})
+        if form.is_valid():
+            form.save(
+                request=request,
+                use_https=request.is_secure(),
+                email_template_name="registration/password_reset_email.html",
+            )
+            return Response({"detail": "Password reset email sent"}, status=status.HTTP_200_OK)
+        return Response({"detail": "Invalid email"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResetPasswordConfirmView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, uidb64, token, *args, **kwargs):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = UserModel.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, UserModel.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            form = SetPasswordForm(user, request.data)
+            if form.is_valid():
+                form.save()
+                return Response({"detail": "Password has been reset"}, status=status.HTTP_200_OK)
+            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Invalid reset link"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def me(request):
+    user = request.user
+    return Response({
+        "id": user.id,
+        "username": getattr(user, "username", None),
+        "email": user.email,
+        "role": getattr(user, "role", None),
+    })
