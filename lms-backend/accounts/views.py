@@ -39,7 +39,7 @@ router.register(r"assignments", AssignmentViewSet, basename="assignment")
 router.register(r"submissions", SubmissionViewSet, basename="submission")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"modules", ModuleViewSet, basename="module")
-router.register(r"analytics", AnalyticsLogViewSet, basename="analytics")
+
 
 # ✅ Simple home redirect
 def home(request):
