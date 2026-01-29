@@ -2,8 +2,6 @@ from rest_framework import permissions, viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -17,9 +15,6 @@ from .serializers import CustomUserSerializer, RegisterSerializer, ProfileSerial
 
 
 class RegisterView(APIView):
-    """
-    Basic registration endpoint (used internally).
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -30,9 +25,6 @@ class RegisterView(APIView):
 
 
 class SignupView(APIView):
-    """
-    Public signup endpoint for new users.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -53,21 +45,13 @@ class SignupView(APIView):
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing users.
-    - Admins: can view/manage all users.
-    - Regular users: can only view their own profile.
-    """
     serializer_class = CustomUserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-
-        # ✅ Guard for Swagger schema generation and anonymous users
         if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
             return CustomUser.objects.none()
-
         if getattr(user, "role", None) == "admin":
             return CustomUser.objects.all()
         return CustomUser.objects.filter(id=user.id)
@@ -83,29 +67,18 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
-        """
-        Return the currently authenticated user's profile (via ViewSet).
-        """
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing user profiles.
-    - Admins: can view/manage all profiles.
-    - Regular users: can only view/manage their own profile.
-    """
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-
-        # ✅ Guard for Swagger schema generation and anonymous users
         if getattr(self, "swagger_fake_view", False) or not user.is_authenticated:
             return Profile.objects.none()
-
         if getattr(user, "role", None) == "admin":
             return Profile.objects.all()
         return Profile.objects.filter(user=user)
@@ -133,9 +106,6 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """
-    Custom JWT serializer that uses email instead of username.
-    """
     username_field = "email"
 
     def validate(self, attrs):
@@ -150,9 +120,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    """
-    Custom JWT view that returns extra user info.
-    """
     serializer_class = CustomTokenObtainPairSerializer
 
 
@@ -160,9 +127,6 @@ UserModel = get_user_model()
 
 
 class ForgotPasswordView(APIView):
-    """
-    Initiates password reset by sending an email with a reset link.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -182,9 +146,6 @@ class ForgotPasswordView(APIView):
 
 
 class ResetPasswordConfirmView(APIView):
-    """
-    Confirms password reset using uid and token, then sets new password.
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, uidb64, token, *args, **kwargs):
@@ -203,13 +164,9 @@ class ResetPasswordConfirmView(APIView):
         return Response({"detail": "Invalid reset link"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ✅ Standalone /auth/me endpoint
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def me(request):
-    """
-    Standalone endpoint to return the currently authenticated user's profile.
-    """
     user = request.user
     return Response({
         "id": user.id,
