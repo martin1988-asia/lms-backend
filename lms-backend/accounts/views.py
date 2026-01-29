@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -6,13 +7,12 @@ from drf_yasg import openapi
 from rest_framework.routers import DefaultRouter
 from django.http import HttpResponse
 
-#from accounts.views import CustomTokenObtainPairView, SignupView, me   # ✅ added me import
+
 from users.views import UserViewSet, ModuleViewSet
 from courses.views import CourseViewSet, EnrollmentViewSet
 from assignments.views import AssignmentViewSet, SubmissionViewSet
 from grades.views import GradeViewSet, SubmissionViewSet as GradeSubmissionViewSet
 from dashboard.views import StudentDashboardView, InstructorDashboardView, AdminDashboardView
-
 
 # ✅ Swagger schema view (public, no auth required)
 schema_view = get_schema_view(
@@ -39,7 +39,6 @@ router.register(r"submissions", SubmissionViewSet, basename="submission")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"modules", ModuleViewSet, basename="module")
 
-
 # ✅ Simple home redirect
 def home(request):
     html = """
@@ -63,6 +62,7 @@ urlpatterns = [
     path("", home, name="home"),
 
     # Accounts + other apps
+    path("accounts/", include("accounts.urls")),
     path("users/", include("users.urls")),
 
     # Dashboards
@@ -77,7 +77,7 @@ urlpatterns = [
     path("api/auth/login/", CustomTokenObtainPairView.as_view(), name="api_auth_login"),
     path("api/auth/refresh/", TokenRefreshView.as_view(), name="api_auth_refresh"),
     path("api/auth/signup/", SignupView.as_view(), name="api_auth_signup"),
-    path("api/auth/me/", me, name="api_auth_me"),   # ✅ added /auth/me route
+    path("api/auth/me/", me, name="api_auth_me"),
 
     # ✅ Swagger / Redoc
     path("swagger.json", schema_view.without_ui(cache_timeout=0), name="schema-json"),
