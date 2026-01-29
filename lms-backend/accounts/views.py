@@ -7,7 +7,7 @@ from drf_yasg import openapi
 from rest_framework.routers import DefaultRouter
 from django.http import HttpResponse
 
-from accounts.views import CustomTokenObtainPairView, SignupView, me   # ✅ added me import
+#from accounts.views import CustomTokenObtainPairView, SignupView, me   # ✅ added me import
 from users.views import UserViewSet, ModuleViewSet
 from courses.views import CourseViewSet, EnrollmentViewSet
 from assignments.views import AssignmentViewSet, SubmissionViewSet
