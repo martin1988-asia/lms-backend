@@ -62,7 +62,6 @@ urlpatterns = [
     path("", home, name="home"),
 
     # Accounts + other apps
-    path("accounts/", include("accounts.urls")),
     path("users/", include("users.urls")),
 
     # Dashboards
